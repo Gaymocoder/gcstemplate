@@ -1,8 +1,8 @@
-option(GCS_WARNINGS_AS_ERRORS "Promote significant warnings to errors" OFF)
+option(GCST_WARNINGS_AS_ERRORS "Promote significant warnings to errors" OFF)
 
 # ---> GNU WARNINGS SETUP <--- #
 
-set(GCS_WARN_GNU
+set(GCST_WARN_GNU
     -Wall
     -Wextra
     -Wpedantic
@@ -25,7 +25,7 @@ set(GCS_WARN_GNU
     -Wimplicit-fallthrough
     -Wmisleading-indentation
 
-    # noisy, kept as warnings only (see GCS_WARN_GNU_NOT_ERRORS)
+    # noisy, kept as warnings only (see GCST_WARN_GNU_NOT_ERRORS)
     -Wconversion
     -Wsign-conversion
     -Wdouble-promotion
@@ -34,7 +34,7 @@ set(GCS_WARN_GNU
     -Wswitch-enum
 )
 
-set(GCS_WARN_GCC_ONLY
+set(GCST_WARN_GCC_ONLY
     -Wduplicated-cond      
     -Wduplicated-branches  
     -Wlogical-op           
@@ -42,14 +42,14 @@ set(GCS_WARN_GCC_ONLY
     -Wsuggest-override
 )
 
-set(GCS_WARN_CLANG_ONLY
+set(GCST_WARN_CLANG_ONLY
     -Wcomma                         
     -Wloop-analysis
     -Winconsistent-missing-override
 )
 
 # -Werror Blacklist
-set(GCS_WARN_GNU_NOT_ERRORS
+set(GCST_WARN_GNU_NOT_ERRORS
     -Wno-error=unused-parameter
     -Wno-error=unused-variable
     -Wno-error=unused-but-set-variable
@@ -73,7 +73,7 @@ set(GCS_WARN_GNU_NOT_ERRORS
 
 # ---> MSVC WARNINGS SETUP <--- #
 
-set(GCS_WARN_MSVC
+set(GCST_WARN_MSVC
     /W4
     /permissive-             
     /Zc:__cplusplus          
@@ -102,7 +102,7 @@ set(GCS_WARN_MSVC
 )
 
 # /we whitelist (no BL in MSVC)
-set(GCS_WARN_MSVC_ERRORS
+set(GCST_WARN_MSVC_ERRORS
     /we4715                         # not all control paths return a value
     /we4700                         # uninitialized local variable used
     /we4703                         # potentially uninitialized pointer used
@@ -115,31 +115,31 @@ set(GCS_WARN_MSVC_ERRORS
     /we4133                         # incompatible types
 )
 
-# ---> GCS WARNING UTILITIES <---
+# ---> GCST WARNING UTILITIES <---
 
-function(gcs_target_warnings target_name)
+function(gcst_target_warnings target_name)
     if(MSVC)
-        set(flags ${GCS_WARN_MSVC})
-        if(GCS_WARNINGS_AS_ERRORS)
-            list(APPEND flags ${GCS_WARN_MSVC_ERRORS})
+        set(flags ${GCST_WARN_MSVC})
+        if(GCST_WARNINGS_AS_ERRORS)
+            list(APPEND flags ${GCST_WARN_MSVC_ERRORS})
         endif()
     else()
-        set(flags ${GCS_WARN_GNU})
+        set(flags ${GCST_WARN_GNU})
         if(CMAKE_CXX_COMPILER_ID STREQUAL "GNU")
-            list(APPEND flags ${GCS_WARN_GCC_ONLY})
+            list(APPEND flags ${GCST_WARN_GCC_ONLY})
         elseif(CMAKE_CXX_COMPILER_ID MATCHES "Clang")
-            list(APPEND flags ${GCS_WARN_CLANG_ONLY})
+            list(APPEND flags ${GCST_WARN_CLANG_ONLY})
         endif()
 
-        if(GCS_WARNINGS_AS_ERRORS)
-            list(APPEND flags -Werror ${GCS_WARN_GNU_NOT_ERRORS})
+        if(GCST_WARNINGS_AS_ERRORS)
+            list(APPEND flags -Werror ${GCST_WARN_GNU_NOT_ERRORS})
         endif()
     endif()
 
     target_compile_options("${target_name}" PRIVATE ${flags})
 endfunction()
 
-function(gcs_target_optimization target_name)
+function(gcst_target_optimization target_name)
     if(MSVC)
         target_compile_options("${target_name}" PRIVATE
             $<$<CONFIG:Debug>:/Od;/Zi>

@@ -1,10 +1,10 @@
 include("${CMAKE_CURRENT_LIST_DIR}/warnings.cmake")
 
-function(gcs_message message)
-    message("-- | (GCS) | ${message}")
+function(gcst_message message)
+    message("-- | (GCST) | ${message}")
 endfunction()
 
-function(gcs_normalize var)
+function(gcst_normalize var)
     if(NOT ${var} OR ${var} MATCHES "-NOTFOUND$")
         set(${var} "" PARENT_SCOPE)
     else()
@@ -14,11 +14,11 @@ function(gcs_normalize var)
 endfunction()
 
 
-function(gcs_export_prepare target_name)
-    gcs_message("Exporting ${target_name}")
+function(gcst_export_prepare target_name)
+    gcst_message("Exporting ${target_name}")
 
     foreach(obj IN LISTS ARGN)
-        gcs_message("-- Adding source-object '${obj}' to target '${target_name}'")
+        gcst_message("-- Adding source-object '${obj}' to target '${target_name}'")
         target_sources(${target_name} PRIVATE $<TARGET_OBJECTS:${obj}>)
     endforeach()
 
@@ -34,26 +34,26 @@ function(gcs_export_prepare target_name)
 
     add_library("${PREFIX}::${MODULE}" ALIAS "${target_name}")
     target_include_directories("${target_name}" PUBLIC
-        $<BUILD_INTERFACE:${GCS_INCLUDE_DIRS}>
+        $<BUILD_INTERFACE:${GCST_INCLUDE_DIRS}>
         $<INSTALL_INTERFACE:include>
     )
     set_target_properties("${target_name}" PROPERTIES EXPORT_NAME "${MODULE}")
-    gcs_target_warnings("${target_name}")
-    gcs_target_optimization("${target_name}")
+    gcst_target_warnings("${target_name}")
+    gcst_target_optimization("${target_name}")
     if (MINGW)
         target_link_libraries("${target_name}" INTERFACE
             $<$<COMPILE_FEATURES:cxx_std_23>:stdc++exp>
         )
     endif()
 
-    gcs_message("Exported (with prefix = '${PREFIX}', module = '${MODULE}')")
+    gcst_message("Exported (with prefix = '${PREFIX}', module = '${MODULE}')")
 endfunction()
 
 
-function(gcs_binary_prepare target_name)
-    target_include_directories("${target_name}" PUBLIC "${GCS_INCLUDE_DIRS}")
-    gcs_target_warnings("${target_name}")
-    gcs_target_optimization("${target_name}")
+function(gcst_binary_prepare target_name)
+    target_include_directories("${target_name}" PUBLIC "${GCST_INCLUDE_DIRS}")
+    gcst_target_warnings("${target_name}")
+    gcst_target_optimization("${target_name}")
     if (MINGW)
         target_link_libraries("${target_name}" PUBLIC
             $<$<COMPILE_FEATURES:cxx_std_23>:stdc++exp>
@@ -62,10 +62,10 @@ function(gcs_binary_prepare target_name)
 
     get_target_property(libs ${target_name} LINK_LIBRARIES)
     get_target_property(opts ${target_name} COMPILE_OPTIONS)
-    gcs_normalize(libs)
-    gcs_normalize(opts)
+    gcst_normalize(libs)
+    gcst_normalize(opts)
 
-    gcs_message("Preparing target '${target_name}'")
-    gcs_message("-- flags: ${opts}")
-    gcs_message("-- libs: ${libs}")
+    gcst_message("Preparing target '${target_name}'")
+    gcst_message("-- flags: ${opts}")
+    gcst_message("-- libs: ${libs}")
 endfunction()

@@ -9,7 +9,7 @@ on:
 jobs:
   build:
     env:
-      GCS_WERROR: ON
+      GCST_WERROR: ON
     strategy:
       fail-fast: false
       matrix:

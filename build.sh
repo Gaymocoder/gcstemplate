@@ -1,6 +1,6 @@
 #!/usr/bin/env sh
 
-:="${GCS_WERROR:-OFF}"
+GCST_WERROR:="${GCST_WERROR:-OFF}"
 CLEAR_BUILD=0
 PRESET=""
 
@@ -43,9 +43,6 @@ else
     CONAN_PROFILE_ARG="$CONAN_PROFILE"
 fi
 
-echo $PRESET
-echo $PROFILE_PATH
-echo $CONAN_PROFILE_ARG
 
 conan install . \
     --profile="$CONAN_PROFILE_ARG" \
@@ -60,9 +57,9 @@ fi
 # ———————————————————————————————————————————————————
 
 if [ -z "$PRESET" ]; then
-    cmake -B build -S . -DGCS_WARNINGS_AS_ERRORS="$GCS_WERROR" || exit 1
+    cmake -B build -S . -DGCST_WARNINGS_AS_ERRORS="$GCST_WERROR" || exit 1
 else
-    cmake --preset "$PRESET" . -DGCS_WARNINGS_AS_ERRORS="$GCS_WERROR" || exit 1
+    cmake --preset "$PRESET" . -DGCST_WARNINGS_AS_ERRORS="$GCST_WERROR" || exit 1
 fi
 
 cmake --build build
