@@ -14,6 +14,7 @@ build/
 conan/
 CMakePresets.json
 CMakeUserPresets.json
+.gcst/.default
 
 # Ignore my own .md
 *.md
@@ -21,5 +22,4 @@ CMakeUserPresets.json
 
 # Don't ignore build-scripts
 !build.sh
-!.github/
-!.github/**
+!.github/workflows/scripts/**
