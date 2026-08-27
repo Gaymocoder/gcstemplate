@@ -201,7 +201,7 @@ def main():
     steps = github_ci["jobs"]["build"]["steps"] = presets[".common-pre"]
 
     presets_extract(presets, CMAKE_PRESETS, CONAN_PROFILES, steps, matrix)
-    steps.append({"name": "Build", "run": "${{ matrix.build }} ${{ matrix.preset }}"})
+    steps.append({"name": "Build", "run": "${{ matrix.build }} --preset ${{ matrix.preset }}"})
     steps.extend(presets[".common-post"])
 
     presets_write(CMAKE_PRESETS, CONAN_PROFILES, github_ci)
