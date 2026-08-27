@@ -1,21 +1,21 @@
 import json
+import argparse
 import os, shutil
 
 from pathlib import Path
 from ruamel.yaml import YAML
 from ruamel.yaml.scalarstring import LiteralScalarString as lss
 
-yaml = YAML()
+HERE = Path(__file__).resolve().parent
+GCST_DIR = HERE.parent
+ROOT = GCST_DIR.parent
+
 PREFIX = " |GCST| "
 def gcstout(*args, **kwargs):
     pref = PREFIX
     if len(args) != 0:
         pref += "--"
     print(pref, *args, **kwargs)
-
-HERE = Path(__file__).resolve().parent
-GCST_DIR = HERE.parent
-ROOT = GCST_DIR.parent
 
 CONAN_PROFILES = {}
 CMAKE_PRESETS = {
@@ -27,6 +27,19 @@ CMAKE_PRESETS = {
     },
     "configurePresets": []
 }
+
+yaml = YAML()
+argvParser = argparse.ArgumentParser(prog = 'gcst-configurer')
+
+
+def getArgs():
+    argvParser.add_argument('-il', '--ignore-local', action = 'store_true')
+    args = argvParser.parse_args()
+    return args
+
+def ignore_local_presets():
+    return getArgs().ignore_local
+
 
 def run_from_file(script_name):
     script_path = ROOT/".github"/"workflows"/"scripts"/script_name
@@ -78,7 +91,7 @@ def githubci_preset_process(key, preset, out_steps, out_matrix):
     out_steps.extend(preset_steps)
 
 
-def presets_read(presets_file, local_presets_file):
+def presets_read(presets_file, presets_local_file):
     gcstout(f"Reading presets from basic JSON: \"{presets_file.relative_to(ROOT)}\"")
     with open(presets_file, "r", encoding = "utf-8") as f:
         presets = json.load(f)
@@ -94,12 +107,12 @@ def presets_read(presets_file, local_presets_file):
             if not element.startswith('.'):
                 gcstout(f"-- -- {element}")
 
-    if not local_presets_file.exists():
+    if not presets_local_file.exists() or ignore_local_presets():
         return presets
 
     gcstout(f"Overriding JSON has been found")
-    gcstout(f"Reading presets from overriding JSON: \"{local_presets_file.relative_to(ROOT)}\"")
-    with open(local_presets_file, "r", encoding = "utf-8") as f:
+    gcstout(f"Reading presets from overriding JSON: \"{presets_local_file.relative_to(ROOT)}\"")
+    with open(presets_local_file, "r", encoding = "utf-8") as f:
         local_presets = json.load(f)
     service = list(key for key in presets if key.startswith("."))
 
