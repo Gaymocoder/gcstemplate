@@ -110,7 +110,7 @@ jobs:
     - uses: ilammy/msvc-dev-cmd@v1
       if: ${{ matrix.preset == 'win64-msvc-msvcstl' }}
     - name: Build
-      run: ${{ matrix.build }} ${{ matrix.preset }}
+      run: ${{ matrix.build }} --preset ${{ matrix.preset }}
     - name: Log results
       if: always()
       shell: bash
