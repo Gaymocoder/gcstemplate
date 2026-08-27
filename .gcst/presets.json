@@ -47,7 +47,7 @@
             "cacheVariables": {
                 "CMAKE_C_COMPILER": "clang",
                 "CMAKE_CXX_COMPILER": "clang++",
-                "CMAKE_TOOLCHAIN_FILE": "./cmake/gcst/toolchains/unix-libc++.cmake",
+                "CMAKE_TOOLCHAIN_FILE": "${sourceDir}/build/conan_toolchain.cmake",
                 "CMAKE_BUILD_TYPE": "Release"
             }
         },
@@ -73,7 +73,7 @@
             "cacheVariables": {
                 "CMAKE_C_COMPILER": "clang",
                 "CMAKE_CXX_COMPILER": "clang++",
-                "CMAKE_TOOLCHAIN_FILE": "./cmake/gcst/toolchains/unix-libstdc++.cmake",
+                "CMAKE_TOOLCHAIN_FILE": "${sourceDir}/build/conan_toolchain.cmake",
                 "CMAKE_BUILD_TYPE": "Release"
             }
         },
@@ -100,7 +100,7 @@
             "cacheVariables": {
                 "CMAKE_C_COMPILER": "clang",
                 "CMAKE_CXX_COMPILER": "clang++",
-                "CMAKE_TOOLCHAIN_FILE": "./cmake/gcst/toolchains/w64-mingw32.cmake",
+                "CMAKE_TOOLCHAIN_FILE": "${sourceDir}/cmake/gcst/toolchains/w64-mingw32.cmake",
                 "CMAKE_BUILD_TYPE": "Release"
             }
         },
@@ -134,7 +134,7 @@
             "cacheVariables": {
                 "CMAKE_C_COMPILER": "clang-cl",
                 "CMAKE_CXX_COMPILER": "clang-cl",
-                "CMAKE_TOOLCHAIN_FILE": "./cmake/gcst/toolchains/w64-msvc++.cmake",
+                "CMAKE_TOOLCHAIN_FILE": "${sourceDir}/build/conan_toolchain.cmake",
                 "CMAKE_BUILD_TYPE": "Release"
             }
         },
@@ -169,7 +169,7 @@
             "cacheVariables": {
                 "CMAKE_C_COMPILER": "gcc",
                 "CMAKE_CXX_COMPILER": "g++",
-                "CMAKE_TOOLCHAIN_FILE": "./build/conan_toolchain.cmake",
+                "CMAKE_TOOLCHAIN_FILE": "${sourceDir}/build/conan_toolchain.cmake",
                 "CMAKE_BUILD_TYPE": "Release"
             }
         },
@@ -196,7 +196,7 @@
             "cacheVariables": {
                 "CMAKE_C_COMPILER": "gcc",
                 "CMAKE_CXX_COMPILER": "g++",
-                "CMAKE_TOOLCHAIN_FILE": "./build/conan_toolchain.cmake",
+                "CMAKE_TOOLCHAIN_FILE": "${sourceDir}/build/conan_toolchain.cmake",
                 "CMAKE_BUILD_TYPE": "Release"
             }
         },
@@ -222,7 +222,7 @@
             "generator": "Visual Studio 18 2026",
             "binaryDir": "${sourceDir}/build",
             "cacheVariables": {
-                "CMAKE_TOOLCHAIN_FILE": "./build/conan_toolchain.cmake",
+                "CMAKE_TOOLCHAIN_FILE": "${sourceDir}/build/conan_toolchain.cmake",
                 "CMAKE_BUILD_TYPE": "Release"
             }
         },
