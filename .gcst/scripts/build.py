@@ -80,7 +80,7 @@ def cmake(preset):
 
     
 def cmake_build():
-    command = ["cmake", "--build", build_dir]
+    command = ["cmake", "--build", build_dir, '--config', 'Release']
     return subprocess.run(command, check = False)
         
 
