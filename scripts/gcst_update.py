@@ -3,9 +3,6 @@ import shutil, filecmp
 from pathlib import Path
 
 GCST_NAME = "CMakeAutoBuild"
-HERE = Path(__file__).resolve().parent
-gcst_path = Path(subprocess.check_output(['git', '-C', HERE, 'rev-parse', '--show-toplevel'], text = True).strip()).absolute()
-sproject_path = Path(subprocess.check_output(['git', '-C', HERE, 'rev-parse', '--show-superproject-working-tree'], text = True).strip()).absolute()
 
 install_and_update = [
     "./.github/workflows",

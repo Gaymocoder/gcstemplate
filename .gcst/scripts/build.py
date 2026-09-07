@@ -1,22 +1,11 @@
 import os
 import sys
+import gcst
 import shutil
 import argparse
 import subprocess
 from pathlib import Path
 
-HERE = Path(__file__).resolve().parent
-root_path = Path(subprocess.check_output(['git', '-C', HERE, 'rev-parse', '--show-toplevel'], text = True).strip()).absolute()
-
-bin_dir = root_path/"bin"
-gcst_dir = root_path/".gcst"
-build_dir = root_path/"build"
-configure_py = gcst_dir/"scripts"/"configure.py"
-
-defaultPreset = ".default"
-defaultPresetPath = gcst_dir/".default"
-
-# TODO: default preset
 # TODO: auto-detect preset
 
 def getArgs():
@@ -31,25 +20,25 @@ def getArgs():
 
 
 def getDefaultPreset():
-    if not defaultPresetPath.exists():
+    if not gcst.paths.default_preset.exists():
         return None
     
-    with open(defaultPresetPath, 'r', encoding = 'utf-8') as f:
+    with open(gcst.paths.default_preset, 'r', encoding = 'utf-8') as f:
         return f.read()
 
 def setDefaultPreset(preset):
-    with open(defaultPresetPath, 'w', encoding = 'utf-8') as f:
+    with open(gcst.paths.default_preset, 'w', encoding = 'utf-8') as f:
         return f.write(preset)
 
     
-def clear_build_directory():
-    shutil.rmtree(bin_dir, ignore_errors = True)
-    shutil.rmtree(build_dir, ignore_errors = True)
+def clear_build_dir():
+    shutil.rmtree(gcst.paths.bin_dir, ignore_errors = True)
+    shutil.rmtree(gcst.paths.build_dir, ignore_errors = True)
     print("Build directories cleared")
 
 
 def gcst_configure():
-    command = [sys.executable, configure_py]
+    command = [sys.executable, gcst.paths.configure_py]
     ignore_local = getArgs().ignore_local
     if ignore_local:
         command.append('--ignore-local')
@@ -61,9 +50,9 @@ def conan_install(profile):
     command = [
         "conan",
         "install",
-        root_path,
+        gcst.paths.repo,
         f"--profile={profile}",
-        f"--output-folder={build_dir}",
+        f"--output-folder={gcst.paths.build_dir}",
         "--build=missing"
     ]
     return subprocess.run(command, check = False)
@@ -72,15 +61,15 @@ def conan_install(profile):
 def cmake(preset):
     command = ["cmake"]
     if preset == ".default":
-        command.extend(["-B", build_dir, "-S", root_path])
+        command.extend(["-B", gcst.paths.build_dir, "-S", gcst.paths.repo])
     else:
         command.extend(["--preset", preset])
     command.append(f"-DGCST_WARNINGS_AS_ERRORS={os.environ['GCST_WERROR']}")
-    return subprocess.run(command, cwd = root_path, check = False)
+    return subprocess.run(command, cwd = gcst.paths.repo, check = False)
 
     
 def cmake_build():
-    command = ["cmake", "--build", build_dir, '--config', 'Release']
+    command = ["cmake", "--build", gcst.paths.build_dir, '--config', 'Release']
     return subprocess.run(command, check = False)
         
 
@@ -93,8 +82,8 @@ def main():
         return 1
 
     if clear:
-        clear_build_directory()
-    os.makedirs(build_dir, exist_ok = True)
+        clear_build_dir()
+    os.makedirs(gcst.paths.build_dir, exist_ok = True)
     
     result = gcst_configure()
     if result.returncode != 0:
@@ -102,7 +91,7 @@ def main():
         print("Executed command:\n", *result.args)
         return 2
 
-    conan_dir = root_path/"conan"/"profiles"
+    conan_dir = gcst.paths.repo/"conan"/"profiles"
     conan_profile = conan_dir/preset
     if not conan_profile.exists():
         print(f"No specified build-preset ({preset}) was found. Aborting")

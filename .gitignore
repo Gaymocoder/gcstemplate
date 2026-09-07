@@ -15,6 +15,7 @@ conan/
 CMakePresets.json
 CMakeUserPresets.json
 .gcst/.default
+.gcst/.temp
 
 # Ignore my own .md
 *.md

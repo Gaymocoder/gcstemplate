@@ -1,3 +1,4 @@
+import gcst
 import json
 import argparse
 import os, shutil
@@ -5,10 +6,6 @@ import os, shutil
 from pathlib import Path
 from ruamel.yaml import YAML
 from ruamel.yaml.scalarstring import LiteralScalarString as lss
-
-HERE = Path(__file__).resolve().parent
-GCST_DIR = HERE.parent
-ROOT = GCST_DIR.parent
 
 PREFIX = " |GCST| "
 def gcstout(*args, **kwargs):
@@ -42,7 +39,7 @@ def ignore_local_presets():
 
 
 def run_from_file(script_name):
-    script_path = ROOT/".github"/"workflows"/"scripts"/script_name
+    script_path = gcst.paths.repo/".github"/"workflows"/"scripts"/script_name
     if os.path.exists(script_path):
         with open(script_path, 'r', encoding = 'utf-8') as script:
             return script.read() + "\n\n"
@@ -92,7 +89,7 @@ def githubci_preset_process(key, preset, out_steps, out_matrix):
 
 
 def presets_read(presets_file, presets_local_file):
-    gcstout(f"Reading presets from basic JSON: \"{presets_file.relative_to(ROOT)}\"")
+    gcstout(f"Reading presets from basic JSON: \"{presets_file.relative_to(gcst.paths.repo)}\"")
     with open(presets_file, "r", encoding = "utf-8") as f:
         presets = json.load(f)
 
@@ -111,7 +108,7 @@ def presets_read(presets_file, presets_local_file):
         return presets
 
     gcstout(f"Overriding JSON has been found")
-    gcstout(f"Reading presets from overriding JSON: \"{presets_local_file.relative_to(ROOT)}\"")
+    gcstout(f"Reading presets from overriding JSON: \"{presets_local_file.relative_to(gcst.paths.repo)}\"")
     with open(presets_local_file, "r", encoding = "utf-8") as f:
         local_presets = json.load(f)
     service = list(key for key in presets if key.startswith("."))
@@ -165,35 +162,35 @@ def presets_extract(presets, cmake_out, conan_out, out_ghci_steps, out_ghci_matr
 
 
 def presets_write(cmake_presets, conan_profiles, github_ci):
-    cmake_presets_file = ROOT/'CMakePresets.json'
+    cmake_presets_file = gcst.paths.repo/'CMakePresets.json'
     gcstout()
-    gcstout(f"Saved CMake presets into \"{cmake_presets_file.relative_to(ROOT)}\"")
+    gcstout(f"Saved CMake presets into \"{cmake_presets_file.relative_to(gcst.paths.repo)}\"")
     with open(cmake_presets_file, 'w', encoding = 'utf-8') as f:
         json.dump(cmake_presets, f, indent = 4)
 
-    conan_profiles_dir = ROOT/'conan'/'profiles'
+    conan_profiles_dir = gcst.paths.repo/'conan'/'profiles'
     gcstout(f"Saved conan profiles:")
     shutil.rmtree(conan_profiles_dir, ignore_errors = True)
     os.makedirs(conan_profiles_dir, exist_ok = True)
     for key in conan_profiles:
         profile_path = conan_profiles_dir/key
-        gcstout(f"-- ./{profile_path.relative_to(ROOT)}")
+        gcstout(f"-- ./{profile_path.relative_to(gcst.paths.repo)}")
         with open(profile_path, 'w', encoding = 'utf-8') as f:
             f.write(conan_profiles[key])
 
-    github_ci_file = ROOT/".github"/"workflows"/"ci.yml"
+    github_ci_file = gcst.paths.repo/".github"/"workflows"/"ci.yml"
     with open(github_ci_file, "w", encoding = "utf-8") as f:
         yaml.dump(github_ci, f)
-    gcstout(f"Saved GitHub CI workflows into \"{github_ci_file.relative_to(ROOT)}\"")
+    gcstout(f"Saved GitHub CI workflows into \"{github_ci_file.relative_to(gcst.paths.repo)}\"")
 
 
 def main():
     print(" ========================> GCST_TEMPLATE_CONFIGURE <========================")
-    presets_file = GCST_DIR/"presets.json"
-    presets_local_file = ROOT/"presets.local.json"
+    presets_file = gcst.path/"presets.json"
+    presets_local_file = gcst.paths.repo/"presets.local.json"
 
     presets = presets_read(presets_file, presets_local_file)
-    with open(os.path.join(ROOT, ".github", "workflows", "ci.yml"), "r", encoding = "utf-8") as f:
+    with open(os.path.join(gcst.paths.repo, ".github", "workflows", "ci.yml"), "r", encoding = "utf-8") as f:
         github_ci = yaml.load(f)
 
     github_ci["jobs"]["build"]["strategy"]["matrix"]["include"] = []
