@@ -22,7 +22,8 @@ install_and_update = [
     "cmake/gcst/toolchains/w64-mingw32.cmake",
  
     "scripts/gcst_update.py",
- 
+
+    ".gitignore",
     "build.bat",
     "build.sh",
 ]
