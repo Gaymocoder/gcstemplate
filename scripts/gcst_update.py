@@ -1,63 +1,69 @@
-import os, subprocess
+import os, sys
 import shutil, filecmp
 from pathlib import Path
 
-GCST_NAME = "CMakeAutoBuild"
+sys.path.insert(0, str(Path(__file__).resolve().parents[1] / ".gcst"))
+import gcst
 
 install_and_update = [
-    "./.github/workflows",
-    "./.gcst",
-    "./cmake/gcst",
-    "./build.bat",
-    "./build.sh",
-    "./scripts/gcst_update.py"
+    ".github/workflows/ci.yml",
+    ".github/workflows/scripts/g++.sh",
+    ".github/workflows/scripts/clang.sh",
+    ".github/workflows/scripts/mingw32.bat",
+ 
+    ".gcst/presets.json",
+    ".gcst/gcst/__init__.py",
+    ".gcst/gcst/constants.py",
+    ".gcst/scripts/build.py",
+    ".gcst/scripts/configure.py",
+ 
+    "cmake/gcst/utils.cmake",
+    "cmake/gcst/warnings.cmake",
+    "cmake/gcst/toolchains/w64-mingw32.cmake",
+ 
+    "scripts/gcst_update.py",
+ 
+    "build.bat",
+    "build.sh",
 ]
 
 install_only = [
-    "./conanfile.py",
-    "./CMakeLists.txt",
+    "conanfile.py",
+    "CMakeLists.txt",
 ]
+
+SRC = gcst.paths.repo
+DEST = gcst.paths.srepo
 
 def get_updating_files():
     all_files = []
     files_to_update = install_and_update + install_only
     for entry in files_to_update:
-        path = Path(gcst_path / entry).absolute()
+        path = Path(SRC / entry).absolute()
         if not path.is_dir():
-            all_files.append(path.relative_to(gcst_path, walk_up = True))
+            all_files.append(path.relative_to(SRC, walk_up = True))
             continue
 
         for file in path.rglob("*"):
             if file.is_dir():
                 continue
-            all_files.append(file.relative_to(gcst_path, walk_up = True))
+            all_files.append(file.relative_to(SRC, walk_up = True))
 
-    matches, mismatches, errors = filecmp.cmpfiles(sproject_path, gcst_path, all_files, shallow=False)
+    _, mismatches, errors = filecmp.cmpfiles(DEST, SRC, all_files, shallow=False)
     files_to_update = []
     for name in all_files:
-        if (name in set(mismatches) | set(errors)) and (gcst_path/name).exists():
-            if (name in install_only) and (sproject_path/name).exists():
+        if (name in set(mismatches) | set(errors)) and (SRC/name).exists():
+            if (str(name) in install_only) and (DEST/name).exists():
                 continue
             files_to_update.append(name)
 
     return files_to_update
 
-
-def find_gcst_submodule():
-    global NAME
-    submodules = subprocess.check_output(['git', 'config', '--file', '.gitmodules', '--get-regexp', 'url'], text = True).strip().split("\n")
-    for sm in submodules:
-        data = sm.split()
-        if data[1].removesuffix('.git') == f'https://github.com/Gaymocoder/{GCST_NAME}':
-            return Path(data[0][len('submodule.'):-len('.url')]).absolute()
-    return ''
-
-
 def main():
-    global sproject_path, gcst_path
-    if (sproject_path == gcst_path):
-        gcst_path = find_gcst_submodule()
-        if (gcst_path == ''):
+    global SRC
+    if (DEST == SRC):
+        SRC = gcst.paths.submodule
+        if (SRC == ''):
             print("The gcstemplate is not a submodule of any repo. Merging impossible")
             return 1
 
@@ -74,10 +80,11 @@ def main():
         return 0
 
     for file in mismatches:
-        ifile = gcst_path / file
-        ofile = sproject_path / file
+        ifile = SRC / file
+        ofile = DEST / file
 
-        print(f'Copying "./{(ifile).relative_to(sproject_path, walk_up = True)}" to "./{(ofile).relative_to(gcst_path, walk_up = True)}"')
+        print(f'Copying "./{(ifile).relative_to(DEST, walk_up = True)}" to "./{(ofile).relative_to(DEST, walk_up = True)}"')
+        ofile.parent.mkdir(parents = True, exist_ok = True)
         shutil.copy(ifile, ofile)
 
 if __name__ == '__main__':
