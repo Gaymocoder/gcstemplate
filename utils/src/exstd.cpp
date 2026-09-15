@@ -10,10 +10,10 @@ namespace gcst::utils::exstd
 #include <windows.h>
 fs::path exe_path()
 {    
-    std::wstring wstrpath(MAX_PATH, L"\0");
+    std::wstring wstrpath(MAX_PATH, L'\0');
     while (true)
     {
-        DWORD total_wchars = GetModuleFileNameW(NULL, MAX_PATH, wstrpath.data());
+        DWORD total_wchars = GetModuleFileNameW(NULL, wstrpath.data(), MAX_PATH);
         if (total_wchars == 0)
             return {};
         if (total_wchars < wstrpath.size())
