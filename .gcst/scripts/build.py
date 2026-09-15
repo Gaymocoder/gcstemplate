@@ -12,6 +12,7 @@ def getArgs():
     argvParser = argparse.ArgumentParser(prog = 'gcst-builder')
     argvParser.add_argument('-p', '--preset')
     argvParser.add_argument('-c', '--clear', action = 'store_true')
+    argvParser.add_argument('-v', '--verbose', action = 'store_true')
     argvParser.add_argument('-il', '--ignore-local', action = 'store_true')
     args = argvParser.parse_args()
     if args.preset == None:
@@ -70,6 +71,8 @@ def cmake(preset):
     
 def cmake_build():
     command = ["cmake", "--build", gcst.paths.build_dir, '--config', 'Release']
+    if getArgs().verbose:
+        command.append('--verbose')
     return subprocess.run(command, check = False)
         
 
