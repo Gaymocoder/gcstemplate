@@ -1,0 +1,9 @@
+
+— Builds with:
+ - unix-clang-libc++        ✓
+ - unix-clang-libstdc++     ✓
+ - unix-gcc-libstdc++       ✗
+ - win64-clang-libstdc++    ? (cancelled)
+ - win64-clang-msvc         ? (cancelled)
+ - win64-gcc-libstdc++      ? (cancelled)
+ - win64-msvc-msvcstl       ? (cancelled)
