@@ -1,3 +1,4 @@
+import re
 import gcst
 import json
 import argparse
@@ -26,11 +27,15 @@ CMAKE_PRESETS = {
 }
 
 yaml = YAML()
-argvParser = argparse.ArgumentParser(prog = 'gcst-configurer')
-
 
 def getArgs():
+    argvParser = argparse.ArgumentParser(prog = 'gcst-configurer')
+    argvParser.add_argument('-pl', '--presets-local', default = None)
     argvParser.add_argument('-il', '--ignore-local', action = 'store_true')
+
+    argvParser.add_argument('--no-cmake', action = 'store_true')
+    argvParser.add_argument('--no-conan', action = 'store_true')
+    argvParser.add_argument('--no-ghci', action = 'store_true')
     args = argvParser.parse_args()
     return args
 
@@ -118,22 +123,34 @@ def presets_read(presets_file, presets_local_file):
 
         if key == ".import":
             if (type(value) != list):
-                gcstout(f"-- WARN: \".import\"-key contains invalid data (list only allowed)")
-                continue
+                if (type(value) != str):
+                    gcstout(f"-- WARN: \".import\"-key contains invalid data (list and str only allowed)")
+                    continue
+                gcstout(f"-- WARN: \".import\"-key contains str-value, processing it as regular expression")
+
+                pattern = re.compile(value)
+                presets = {key: presets[key] for key in presets if (pattern.search(key) or key.startswith('.'))}
+            else:
+                presets = {key: presets[key] for key in (service + value)}
+
             gcstout(f"-- Imported presets from basic JSON:")
-            presets = {key: presets[key] for key in (service + value)}
             for key in presets:
                 gcstout(f"-- -- {key}")
             continue
 
         if key == ".remove":
-            if value == "*":
-                gcstout(f"-- Removed all presets from basic JSON")
-                presets = {key: presets[key] for key in service}
-                continue
+            removed = value
+            if (type(value) != list):
+                if (type(value) != str):
+                    gcstout(f"-- WARN: \".remove\"-key contains invalid data (list and str only allowed)")
+                    continue
+                gcstout(f"-- WARN: \".remove\"-key contains str-value, processing it as regular expression")
+
+                pattern = re.compile(value)
+                removed = [key for key in presets if (pattern.search(key) and not key.startswith('.'))]
 
             gcstout(f"-- Removed presets from basic JSON:")
-            for preset_name in local_presets[key]:
+            for preset_name in removed:
                 gcstout(f"-- -- {preset_name}")
                 del presets[preset_name]
             continue
@@ -162,32 +179,38 @@ def presets_extract(presets, cmake_out, conan_out, out_ghci_steps, out_ghci_matr
 
 
 def presets_write(cmake_presets, conan_profiles, github_ci):
-    cmake_presets_file = gcst.paths.repo/'CMakePresets.json'
-    gcstout()
-    gcstout(f"Saved CMake presets into \"{cmake_presets_file.relative_to(gcst.paths.repo)}\"")
-    with open(cmake_presets_file, 'w', encoding = 'utf-8') as f:
-        json.dump(cmake_presets, f, indent = 4)
+    if not getArgs().no_cmake:
+        cmake_presets_file = gcst.paths.repo/'CMakePresets.json'
+        gcstout()
+        gcstout(f"Saved CMake presets into \"{cmake_presets_file.relative_to(gcst.paths.repo)}\"")
+        with open(cmake_presets_file, 'w', encoding = 'utf-8') as f:
+            json.dump(cmake_presets, f, indent = 4)
 
-    conan_profiles_dir = gcst.paths.repo/'conan'/'profiles'
-    gcstout(f"Saved conan profiles:")
-    shutil.rmtree(conan_profiles_dir, ignore_errors = True)
-    os.makedirs(conan_profiles_dir, exist_ok = True)
-    for key in conan_profiles:
-        profile_path = conan_profiles_dir/key
-        gcstout(f"-- ./{profile_path.relative_to(gcst.paths.repo)}")
-        with open(profile_path, 'w', encoding = 'utf-8') as f:
-            f.write(conan_profiles[key])
+    if not getArgs().no_conan:
+        conan_profiles_dir = gcst.paths.repo/'conan'/'profiles'
+        gcstout(f"Saved conan profiles:")
+        shutil.rmtree(conan_profiles_dir, ignore_errors = True)
+        os.makedirs(conan_profiles_dir, exist_ok = True)
+        for key in conan_profiles:
+            profile_path = conan_profiles_dir/key
+            gcstout(f"-- ./{profile_path.relative_to(gcst.paths.repo)}")
+            with open(profile_path, 'w', encoding = 'utf-8') as f:
+                f.write(conan_profiles[key])
 
-    github_ci_file = gcst.paths.repo/".github"/"workflows"/"ci.yml"
-    with open(github_ci_file, "w", encoding = "utf-8") as f:
-        yaml.dump(github_ci, f)
-    gcstout(f"Saved GitHub CI workflows into \"{github_ci_file.relative_to(gcst.paths.repo)}\"")
+    if not getArgs().no_ghci:
+        github_ci_file = gcst.paths.repo/".github"/"workflows"/"ci.yml"
+        with open(github_ci_file, "w", encoding = "utf-8") as f:
+            yaml.dump(github_ci, f)
+        gcstout(f"Saved GitHub CI workflows into \"{github_ci_file.relative_to(gcst.paths.repo)}\"")
 
 
 def main():
     print(" ========================> GCST_TEMPLATE_CONFIGURE <========================")
     presets_file = gcst.path/"presets.json"
-    presets_local_file = gcst.paths.repo/"presets.local.json"
+    presets_local_file = getArgs().presets_local
+    if presets_local_file == None:
+        presets_local_file = gcst.paths.repo/"presets.local.json"
+    presets_local_file = Path(presets_local_file).resolve()
 
     presets = presets_read(presets_file, presets_local_file)
     with open(os.path.join(gcst.paths.repo, ".github", "workflows", "ci.yml"), "r", encoding = "utf-8") as f:
