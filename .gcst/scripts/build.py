@@ -78,7 +78,9 @@ def conan_install(profile):
         gcst.paths.repo,
         f"--profile={profile}",
         f"--output-folder={gcst.paths.build_dir}",
-        "--build=missing"
+        "--build=missing",
+        "-c tools.system.package_manager:mode=install",
+        "-c tools.system.package_manager:sudo=True"
     ]
     return subprocess.run(command, check = False)
 
