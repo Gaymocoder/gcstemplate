@@ -28,6 +28,15 @@ CMAKE_PRESETS = {
 
 yaml = YAML()
 
+def deep_merge(a, b):
+    result = a.copy()
+    for key, value in b.items():
+        if key in result and isinstance(result[key], dict) and isinstance(value, dict):
+            result[key] = deep_merge(result[key], value)
+        else:
+            result[key] = value
+    return result
+
 def getArgs():
     argvParser = argparse.ArgumentParser(prog = 'gcst-configurer')
     argvParser.add_argument('-pl', '--presets-local', default = None)
@@ -160,9 +169,13 @@ def presets_read(presets_file, presets_local_file):
 
         if key in presets:
             gcstout(f"-- Overrided preset \"{key}\"")
+            if ".merge" in local_presets[key] and local_presets[key][".merge"] == True:
+                deep_merge(presets[key], local_presets[key])
+                continue
         else:
             gcstout(f"-- Added preset \"{key}\"")
         presets[key] = local_presets[key]
+
 
     gcstout(f"Found {len(presets) - len(service)} presets")
     return presets
