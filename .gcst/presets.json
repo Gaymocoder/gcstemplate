@@ -114,7 +114,7 @@
             "cacheVariables": {
                 "CMAKE_C_COMPILER": "clang",
                 "CMAKE_CXX_COMPILER": "clang++",
-                "CMAKE_TOOLCHAIN_FILE": "${sourceDir}/cmake/gcst/toolchains/w64-mingw32.cmake",
+                "CMAKE_TOOLCHAIN_FILE": "${sourceDir}/build/conan_toolchain.cmake",
                 "CMAKE_BUILD_TYPE": "Release"
             }
         },
@@ -235,6 +235,9 @@
                 "compiler.version": "14",
                 "compiler.libcxx": "libstdc++11",
                 "build_type": "Release"
+            },
+            "conf": {
+                "tools.build:compiler_executables": "{\"c\": \"x86_64-w64-mingw32-gcc\", \"cpp\": \"x86_64-w64-mingw32-g++\"}"
             }
         },
         "github_ci": [
