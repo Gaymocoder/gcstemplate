@@ -52,12 +52,14 @@
             }
         },
         "conan": {
-            "os": "Linux",
-            "arch": "x86_64",
-            "compiler": "clang",
-            "compiler.version": "22",
-            "compiler.libcxx": "libc++",
-            "build_type": "Release"
+            "settings": {
+                "os": "Linux",
+                "arch": "x86_64",
+                "compiler": "clang",
+                "compiler.version": "22",
+                "compiler.libcxx": "libc++",
+                "build_type": "Release"
+            }
         },
         "github_ci": [
             {
@@ -78,12 +80,17 @@
             }
         },
         "conan": {
-            "os": "Linux",
-            "arch": "x86_64",
-            "compiler": "clang",
-            "compiler.version": "22",
-            "compiler.libcxx": "libstdc++11",
-            "build_type": "Release"
+            "settings": {
+                "os": "Linux",
+                "arch": "x86_64",
+                "compiler": "clang",
+                "compiler.version": "22",
+                "compiler.libcxx": "libstdc++11",
+                "build_type": "Release"
+            },
+            "conf": {
+                "tools.build:compiler_executables": "{\"c\": \"clang\", \"cpp\": \"clang++\"}"
+            }
         },
         "github_ci": [
             {
@@ -105,12 +112,17 @@
             }
         },
         "conan": {
-            "os": "Windows",
-            "arch": "x86_64",
-            "compiler": "clang",
-            "compiler.version": "20",
-            "compiler.libcxx": "libstdc++11",
-            "build_type": "Release"
+            "settings": {
+                "os": "Windows",
+                "arch": "x86_64",
+                "compiler": "clang",
+                "compiler.version": "20",
+                "compiler.libcxx": "libstdc++11",
+                "build_type": "Release"
+            },
+            "conf": {
+                "tools.build:compiler_executables": "{\"c\": \"clang\", \"cpp\": \"clang++\"}"
+            }
         },
         "github_ci": [
             {
@@ -139,14 +151,16 @@
             }
         },
         "conan": {
-            "os": "Windows",
-            "arch": "x86_64",
-            "compiler": "clang",
-            "compiler.version": "20",
-            "compiler.runtime": "dynamic",
-            "compiler.runtime_type": "Release",
-            "compiler.runtime_version": "v145",
-            "build_type": "Release"
+            "settings": {
+                "os": "Windows",
+                "arch": "x86_64",
+                "compiler": "clang",
+                "compiler.version": "20",
+                "compiler.runtime": "dynamic",
+                "compiler.runtime_type": "Release",
+                "compiler.runtime_version": "v145",
+                "build_type": "Release"
+            }
         },
         "github_ci": [
             {
@@ -174,12 +188,14 @@
             }
         },
         "conan": {
-            "os": "Linux",
-            "arch": "x86_64",
-            "compiler": "gcc",
-            "compiler.version": "14",
-            "compiler.libcxx": "libstdc++11",
-            "build_type": "Release"
+            "settings": {
+                "os": "Linux",
+                "arch": "x86_64",
+                "compiler": "gcc",
+                "compiler.version": "14",
+                "compiler.libcxx": "libstdc++11",
+                "build_type": "Release"
+            }
         },
         "github_ci": [
             {
@@ -201,12 +217,14 @@
             }
         },
         "conan": {
-            "os": "Windows",
-            "arch": "x86_64",
-            "compiler": "gcc",
-            "compiler.version": "14",
-            "compiler.libcxx": "libstdc++11",
-            "build_type": "Release"
+            "settings": {
+                "os": "Windows",
+                "arch": "x86_64",
+                "compiler": "gcc",
+                "compiler.version": "14",
+                "compiler.libcxx": "libstdc++11",
+                "build_type": "Release"
+            }
         },
         "github_ci": [
             {
@@ -227,13 +245,15 @@
             }
         },
         "conan": {
-            "os": "Windows",
-            "arch": "x86_64",
-            "compiler": "msvc",
-            "compiler.version": "194",
-            "compiler.runtime": "dynamic",
-            "compiler.runtime_type": "Release",
-            "build_type": "Release"
+            "settings": {
+                "os": "Windows",
+                "arch": "x86_64",
+                "compiler": "msvc",
+                "compiler.version": "194",
+                "compiler.runtime": "dynamic",
+                "compiler.runtime_type": "Release",
+                "build_type": "Release"
+            }
         },
         "github_ci": [
             {

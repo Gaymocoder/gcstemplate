@@ -58,15 +58,18 @@ def cmake_preset_process(key, preset, out_presets):
 
     
 def conan_preset_process(key, preset, out_profiles):
-    out_profiles[key] = '[settings]\n'
-    for conkey in preset["conan"]:
-        conval = preset["conan"][conkey]
-        out_profiles[key] += f'{conkey}={conval}\n'
+    out_profiles[key] = ''
+    for namespace in preset["conan"]:
+        out_profiles[key] += f'[{namespace}]\n'
+        for conkey in preset["conan"][namespace]:
+            conval = preset["conan"][namespace][conkey]
+            out_profiles[key] += f'{conkey}={conval}\n'
+        out_profiles[key] += '\n'
 
 
 def githubci_preset_process(key, preset, out_steps, out_matrix):
     matrix_preset = {"preset": f'{key}'}
-    match preset["conan"]["os"]:
+    match preset["conan"]["settings"]["os"]:
         case "Linux":
             matrix_preset["os"] = "ubuntu-latest"
             matrix_preset["build"] = "sh build.sh"
@@ -191,6 +194,7 @@ def presets_write(cmake_presets, conan_profiles, github_ci):
         gcstout(f"Saved conan profiles:")
         shutil.rmtree(conan_profiles_dir, ignore_errors = True)
         os.makedirs(conan_profiles_dir, exist_ok = True)
+        print(json.dumps(conan_profiles, indent = 4, ensure_ascii = False))
         for key in conan_profiles:
             profile_path = conan_profiles_dir/key
             gcstout(f"-- ./{profile_path.relative_to(gcst.paths.repo)}")
