@@ -15,12 +15,21 @@ jobs:
       fail-fast: false
       matrix:
         include:
+        - preset: unix-clang-libc++
+          os: ubuntu-latest
+          build: sh build.sh
+        - preset: unix-clang-libstdc++
+          os: ubuntu-latest
+          build: sh build.sh
         - preset: win64-clang-libstdc++
           os: windows-latest
           build: ./build.bat
         - preset: win64-clang-msvc
           os: windows-latest
           build: ./build.bat
+        - preset: unix-gcc-libstdc++
+          os: ubuntu-latest
+          build: sh build.sh
         - preset: win64-gcc-libstdc++
           os: windows-latest
           build: ./build.bat
@@ -37,6 +46,39 @@ jobs:
     - run: conan profile detect --force
     - run: python .gcst/scripts/configure.py
     - run: git diff --exit-code .github/workflows/ci.yml
+    - if: ${{ matrix.preset == 'unix-clang-libc++' }}
+      run: |+
+        wget https://apt.llvm.org/llvm.sh
+        chmod +x llvm.sh
+        sudo ./llvm.sh 22
+        sudo apt update
+        sudo apt install -y libc++-22-dev libc++abi-22-dev
+
+        sudo update-alternatives --install /usr/bin/clang   clang   /usr/bin/clang-22   1000
+        sudo update-alternatives --install /usr/bin/clang++ clang++ /usr/bin/clang++-22 1000
+        sudo update-alternatives --set clang   /usr/bin/clang-22
+        sudo update-alternatives --set clang++ /usr/bin/clang++-22
+        clang --version
+
+    - if: ${{ matrix.preset == 'unix-clang-libstdc++' }}
+      run: |+
+        wget https://apt.llvm.org/llvm.sh
+        chmod +x llvm.sh
+        sudo ./llvm.sh 22
+        sudo apt update
+        sudo apt install -y libc++-22-dev libc++abi-22-dev
+
+        sudo update-alternatives --install /usr/bin/clang   clang   /usr/bin/clang-22   1000
+        sudo update-alternatives --install /usr/bin/clang++ clang++ /usr/bin/clang++-22 1000
+        sudo update-alternatives --set clang   /usr/bin/clang-22
+        sudo update-alternatives --set clang++ /usr/bin/clang++-22
+        clang --version
+
+        sudo apt update
+        sudo apt install -y g++-14
+        sudo update-alternatives --install /usr/bin/g++ g++ /usr/bin/g++-14 100
+        sudo update-alternatives --install /usr/bin/gcc gcc /usr/bin/gcc-14 100
+
     - uses: KyleMayes/install-llvm-action@v2
       with:
         version: '20'
@@ -53,6 +95,13 @@ jobs:
       with:
         version: '20'
       if: ${{ matrix.preset == 'win64-clang-msvc' }}
+    - if: ${{ matrix.preset == 'unix-gcc-libstdc++' }}
+      run: |+
+        sudo apt update
+        sudo apt install -y g++-14
+        sudo update-alternatives --install /usr/bin/g++ g++ /usr/bin/g++-14 100
+        sudo update-alternatives --install /usr/bin/gcc gcc /usr/bin/gcc-14 100
+
     - shell: pwsh
       if: ${{ matrix.preset == 'win64-gcc-libstdc++' }}
       run: |+
