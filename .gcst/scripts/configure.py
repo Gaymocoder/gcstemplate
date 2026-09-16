@@ -168,10 +168,11 @@ def presets_read(presets_file, presets_local_file):
             continue
 
         if key in presets:
-            gcstout(f"-- Overrided preset \"{key}\"")
             if ".merge" in local_presets[key] and local_presets[key][".merge"] == True:
-                deep_merge(presets[key], local_presets[key])
+                gcstout(f"-- Overrided preset (merged) \"{key}\"")
+                presets[key] = deep_merge(presets[key], local_presets[key])
                 continue
+            gcstout(f"-- Overrided preset (rebased) \"{key}\"")
         else:
             gcstout(f"-- Added preset \"{key}\"")
         presets[key] = local_presets[key]
@@ -207,7 +208,6 @@ def presets_write(cmake_presets, conan_profiles, github_ci):
         gcstout(f"Saved conan profiles:")
         shutil.rmtree(conan_profiles_dir, ignore_errors = True)
         os.makedirs(conan_profiles_dir, exist_ok = True)
-        print(json.dumps(conan_profiles, indent = 4, ensure_ascii = False))
         for key in conan_profiles:
             profile_path = conan_profiles_dir/key
             gcstout(f"-- ./{profile_path.relative_to(gcst.paths.repo)}")
