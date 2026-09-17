@@ -103,4 +103,4 @@ def main():
         shutil.copy(ifile, ofile)
 
 if __name__ == '__main__':
-    main()
+    sys.exit(main())
