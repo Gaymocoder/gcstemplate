@@ -90,7 +90,7 @@ def main():
     files_list = ''.join(f'  .{os.sep}{p}\n' for p in mismatches)
     print(f"WARNING! The gcstemplate files will replace these files in your root repo directory:\n{files_list}")
     confirm = input("Make sure you've backuped all important edits from the files before updating them\nDo you want to continue? [Y/n] ")
-    if confirm.lower() != "y":
+    if confirm.lower() not in ["y", ""]:
         print("Aborted.")
         return 0
 
