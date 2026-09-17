@@ -1,5 +1,5 @@
 cmake_minimum_required(VERSION 3.31)
-project(gcstemplate VERSION 4.3.0)
+project(gcstemplate VERSION 5.0.0)
 
 find_package(Boost REQUIRED)
 
