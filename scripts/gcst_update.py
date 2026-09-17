@@ -39,7 +39,11 @@ DEST = gcst.paths.srepo
 
 def get_install_only():
     global install_and_update, install_only
-    with open(Path(__file__).parent/".gcstu-install-only", 'a+', encoding = 'utf-8') as gio_file:
+    gio_filepath = gcst.paths.srepo/"scripts"/".gcstu-install-only"
+    if not gio_filepath.is_file():
+        gio_filepath = gcst.paths.repo/"scripts"/".gcstu-install-only"
+
+    with open(gio_filepath) as gio_file:
         gio_file.seek(0)
         install_only = [line.strip() for line in gio_file.readlines()]
 
