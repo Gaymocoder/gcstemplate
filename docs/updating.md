@@ -33,15 +33,19 @@ After an update, build once and commit the regenerated `ci.yml` — see [Keeping
 
 | Updated on every run | Installed once, never overwritten |
 |---|---|
-| `.github/workflows/ci.yml` and `.github/workflows/scripts/` | `conanfile.py` |
-| `.gcst/presets.json`, the [`gcst` package](scripting.md), `build.py`, `configure.py` | `CMakeLists.txt` |
-| `cmake/gcst/utils.cmake`, `cmake/gcst/warnings.cmake` | `scripts/.gcstu-install-only` |
+| `.github/workflows/ci.yml` | `conanfile.py` |
+| `.github/workflows/scripts/`: `g++.sh`, `clang.sh`, `mingw32.bat` | `CMakeLists.txt` |
+| `.gcst/presets.json`, `.gcst/scripts/build.py`, `.gcst/scripts/configure.py` | `scripts/.gcstu-install-only` |
+| [`gcst` package](scripting.md): `.gcst/gcst/__init__.py`, `.gcst/gcst/constants.py` | |
+| `cmake/gcst/utils.cmake`, `cmake/gcst/warnings.cmake` | |
 | `scripts/gcst_update.py` | |
 | `.gitignore`, `build.sh`, `build.bat` | |
+
+The updater copies exactly these files, not whole directories. A file that isn't on the list — say, a new script in the template's `.github/workflows/scripts/` — isn't installed.
 
 > **[!WARNING]**  
 > Updated files are replaced, not merged. Keep your presets in [`presets.local.json`](local-presets.md), not in `.gcst/presets.json`, and your warning tweaks outside `cmake/gcst/`.
 
 ## Install-only list
 
-The right column comes from `scripts/.gcstu-install-only`: one repository-relative path per line, read from next to the running `gcst_update.py`. Add a path there to have that file installed once and left alone afterwards.
+The right column comes from `scripts/.gcstu-install-only`: one repository-relative path per line. The updater reads the copy in your project root and falls back to the template's own only when the root one doesn't exist — so it doesn't matter whether you run the updater from the submodule or from the root. Add a path to the root copy to have that file installed once and left alone afterwards.
