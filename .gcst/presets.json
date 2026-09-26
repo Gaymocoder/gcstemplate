@@ -1,4 +1,19 @@
 {
+    ".vars": {
+        "GCC_VERSION": {
+            "local": "16.0.1",
+            "github_ci": "16.0.1"
+        },
+        "CLANG_VERSION": {
+            "local": "19.1.7",
+            "github_ci": "19.1.7"
+        },
+        "MSVC_VERSION": {
+            "local": "195",
+            "github_ci": "195"
+        }
+    },
+
     ".common-pre": [
         {
             "uses": "actions/setup-python@v5",
@@ -86,7 +101,6 @@
                 "os": "Linux",
                 "arch": "x86_64",
                 "compiler": "clang",
-                "compiler.version": "22",
                 "compiler.libcxx": "libc++",
                 "build_type": "Release"
             },
@@ -120,7 +134,6 @@
                 "os": "Linux",
                 "arch": "x86_64",
                 "compiler": "clang",
-                "compiler.version": "22",
                 "compiler.libcxx": "libstdc++11",
                 "build_type": "Release"
             },
@@ -132,7 +145,7 @@
         },
         "github_ci": [
             {
-                "run-files": ["clang.sh", "g++.sh"]
+                "run-files": ["clang.sh", "gcc.sh"]
             }
         ]
     },
@@ -154,7 +167,6 @@
                 "os": "Windows",
                 "arch": "x86_64",
                 "compiler": "clang",
-                "compiler.version": "20",
                 "compiler.libcxx": "libstdc++11",
                 "build_type": "Release"
             },
@@ -168,13 +180,7 @@
         },
         "github_ci": [
             {
-                "uses": "KyleMayes/install-llvm-action@v2",
-                "with": {
-                    "version": "20"
-                }
-            },
-            {
-                "run-files": ["mingw32.bat"],
+                "run-files": ["clang-mingw.ps1"],
                 "shell": "pwsh"
             }
         ]
@@ -197,7 +203,6 @@
                 "os": "Windows",
                 "arch": "x86_64",
                 "compiler": "clang",
-                "compiler.version": "20",
                 "compiler.runtime": "dynamic",
                 "compiler.runtime_type": "Release",
                 "compiler.runtime_version": "v145",
@@ -209,10 +214,7 @@
                 "uses": "ilammy/msvc-dev-cmd@v1"
             },
             {
-                "uses": "KyleMayes/install-llvm-action@v2",
-                "with": {
-                    "version": "20"
-                }
+                "run-files": ["clang-msvc.ps1"]
             }
         ]
     },
@@ -234,14 +236,13 @@
                 "os": "Linux",
                 "arch": "x86_64",
                 "compiler": "gcc",
-                "compiler.version": "14",
                 "compiler.libcxx": "libstdc++11",
                 "build_type": "Release"
             }
         },
         "github_ci": [
             {
-                "run-files": ["g++.sh"]
+                "run-files": ["gcc.sh"]
             }
         ]
     },
@@ -263,7 +264,6 @@
                 "os": "Windows",
                 "arch": "x86_64",
                 "compiler": "gcc",
-                "compiler.version": "14",
                 "compiler.libcxx": "libstdc++11",
                 "build_type": "Release"
             },
@@ -273,7 +273,7 @@
         },
         "github_ci": [
             {
-                "run-files": ["mingw32.bat"],
+                "run-files": ["gcc.ps1"],
                 "shell": "pwsh"
             }
         ]
@@ -294,7 +294,6 @@
                 "os": "Windows",
                 "arch": "x86_64",
                 "compiler": "msvc",
-                "compiler.version": "195",
                 "compiler.runtime": "dynamic",
                 "compiler.runtime_type": "Release",
                 "build_type": "Release"

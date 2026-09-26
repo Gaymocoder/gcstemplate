@@ -2,7 +2,7 @@ import re
 import gcst
 import json
 import argparse
-import os, shutil
+import os, sys, shutil
 
 from pathlib import Path
 from ruamel.yaml import YAML
@@ -15,6 +15,7 @@ def gcstout(*args, **kwargs):
         pref += "--"
     print(pref, *args, **kwargs)
 
+VARS = {}
 CONAN_PROFILES = {}
 CMAKE_PRESETS = {
     "version": 3,
@@ -25,6 +26,7 @@ CMAKE_PRESETS = {
     },
     "configurePresets": []
 }
+
 
 yaml = YAML()
 
@@ -53,12 +55,19 @@ def ignore_local_presets():
 
 
 def run_from_file(script_name):
-    script_path = gcst.paths.repo/".github"/"workflows"/"scripts"/script_name
-    if os.path.exists(script_path):
-        with open(script_path, 'r', encoding = 'utf-8') as script:
-            return script.read() + "\n\n"
-    gcstout(f"No script with name \"{script_name}\" was found in \".github/workflows/scripts/'\"")
-    return ''
+    script_path = gcst.paths.ghci_dir/"scripts"/script_name
+    with open(script_path, 'r', encoding = 'utf-8') as script:
+        text = script.read()
+        if len(VARS) == 0:
+            return text + "\n\n"
+        for varname in VARS:
+            if type(VARS[varname]) in [list, dict]:
+                continue
+            vartag = f'{{gcst::{varname.lower()}}}'
+            if vartag in text:
+                text = text.replace(vartag, VARS[varname])
+                gcstout(f'-- -- "{vartag}" in "{script_name}"-script replaced with "{VARS[varname]}"')
+        return text + "\n\n"
 
 
 def cmake_preset_process(key, preset, out_presets):
@@ -68,6 +77,21 @@ def cmake_preset_process(key, preset, out_presets):
     
 def conan_preset_process(key, preset, out_profiles):
     out_profiles[key] = ''
+    if 'settings' not in preset['conan']:
+        gcstout('-- -- ERROR: "settings"-section for conan is required, but not found. Aborting')
+        return 1
+
+    settings = preset['conan']['settings']
+    if 'compiler.version' not in settings:
+        compver = f'{settings["compiler"].upper()}_VERSION'
+        if not (compver in VARS and 'local' in VARS[compver] and 'github_ci' in VARS[compver]):
+            gcstout('-- -- ERROR: no version for compiler is specified in conan. Aborting')
+            sys.exit(2)
+
+        if 'GITHUB_PATH' in os.environ.copy():
+            VARS[compver]["local"] = VARS[compver]["github_ci"]
+        settings["compiler.version"] = gcst.versions(VARS[compver]["local"]).major
+
     for namespace in preset["conan"]:
         out_profiles[key] += f'[{namespace}]\n'
         for conkey in preset["conan"][namespace]:
@@ -94,9 +118,31 @@ def githubci_preset_process(key, preset, out_steps, out_matrix):
             preset_steps.append(step)
             continue
 
+        i = 0
         step["run"] = ''
         for script in step["run-files"]:
-            step["run"] += run_from_file(script)
+            version = None
+            compiler = re.split(r"\.|\-", script)[0]
+            compver = f'{compiler.upper()}_VERSION'
+            if not (compver in VARS and 'local' in VARS[compver] and 'github_ci' in VARS[compver]):
+                gcstout(f"-- ERROR: no version was found for '{script}'-script. Aborting")
+                gcstout(f"-- ADVICE: define it as '{{COMPILER}}_VERSION' in '.vars'-field in your presets.local.json")
+                sys.exit(1)
+            version = VARS[compver]['github_ci']
+
+            try:
+                text = run_from_file(script)
+                step["run"] += text
+
+            except (AttributeError, IndexError):
+                gcstout(f"-- ERROR: non-valid version for '{script}'-script ({version}). Aborting")
+                sys.exit(2)
+
+            except FileNotFoundError:
+                gcstout(f"-- ERROR: '{script}'-script was not found in '{gcst.paths.ghci_dir/"scripts"}'-directory. Aborting")
+                sys.exit(3)
+                
+
         step["run"] = lss(step["run"])
         del step["run-files"]
         preset_steps.append(step)
@@ -186,13 +232,33 @@ def presets_extract(presets, cmake_out, conan_out, out_ghci_steps, out_ghci_matr
     gcstout()
     gcstout("Extracting CMake, conan and GitHub CI profiles from detected presets:")
     for key in presets:
-        if key in [".common-pre", ".common-post"]:
+        if key.startswith("."):
+            if key == ".vars":
+                global VARS
+                VARS = presets[key]
+                gcstout(f"-- Added global vars:")
+                additional_vars = {}
+                for key in VARS:
+                    if key.lower().endswith("version"):
+                        buf = {}
+                        key_fv = f'{key[:-8]}_FULL_VERSION'
+                        key_mv = f'{key[:-8]}_MAJOR_VERSION'
+                        buf[f'{key_fv}_LOCAL'] = VARS[key]['local']
+                        buf[f'{key_fv}_GITHUB_CI'] = VARS[key]['github_ci']
+                        buf[f'{key_mv}_LOCAL'] = gcst.versions(VARS[key]['local']).major
+                        buf[f'{key_mv}_GITHUB_CI'] = gcst.versions(VARS[key]['github_ci']).major
+                        for key in buf:
+                            gcstout(f"-- -- {key}: {buf[key]}")
+                        additional_vars.update(buf)
+                        continue
+                    gcstout(f"-- -- {key}: {VARS[key]}")
+                VARS.update(additional_vars)
             continue
+        gcstout(f"-- {key}")
         preset = presets[key]
         cmake_preset_process(key, preset, cmake_out)
         conan_preset_process(key, preset, conan_out)
         githubci_preset_process(key, preset, out_ghci_steps, out_ghci_matrix)
-        gcstout(f"-- {key}")
 
 
 def presets_write(cmake_presets, conan_profiles, github_ci):

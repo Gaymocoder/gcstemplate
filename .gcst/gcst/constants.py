@@ -50,6 +50,10 @@ class _Paths:
         return self.gcst/".temp"
 
     @cached_property
+    def ghci_dir(self):
+        return self.repo/".github"/"workflows"
+
+    @cached_property
     def build_dir(self):
         return self.repo/"build"
 

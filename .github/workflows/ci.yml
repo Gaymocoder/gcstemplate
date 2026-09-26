@@ -61,62 +61,94 @@ jobs:
       run: |+
         wget https://apt.llvm.org/llvm.sh
         chmod +x llvm.sh
-        sudo ./llvm.sh 22
+        sudo ./llvm.sh 19 all
         sudo apt update
-        sudo apt install -y libc++-22-dev libc++abi-22-dev
+        sudo apt install -y libc++-19-dev libc++abi-19-dev
 
-        sudo update-alternatives --install /usr/bin/clang   clang   /usr/bin/clang-22   1000
-        sudo update-alternatives --install /usr/bin/clang++ clang++ /usr/bin/clang++-22 1000
-        sudo update-alternatives --set clang   /usr/bin/clang-22
-        sudo update-alternatives --set clang++ /usr/bin/clang++-22
+        sudo update-alternatives --install /usr/bin/clang   clang   /usr/bin/clang-19   1000
+        sudo update-alternatives --install /usr/bin/clang++ clang++ /usr/bin/clang++-19 1000
+        sudo update-alternatives --set clang   /usr/bin/clang-19
+        sudo update-alternatives --set clang++ /usr/bin/clang++-19
         clang --version
 
     - if: ${{ matrix.preset == 'unix-clang-libstdc++' }}
       run: |+
         wget https://apt.llvm.org/llvm.sh
         chmod +x llvm.sh
-        sudo ./llvm.sh 22
+        sudo ./llvm.sh 19 all
         sudo apt update
-        sudo apt install -y libc++-22-dev libc++abi-22-dev
+        sudo apt install -y libc++-19-dev libc++abi-19-dev
 
-        sudo update-alternatives --install /usr/bin/clang   clang   /usr/bin/clang-22   1000
-        sudo update-alternatives --install /usr/bin/clang++ clang++ /usr/bin/clang++-22 1000
-        sudo update-alternatives --set clang   /usr/bin/clang-22
-        sudo update-alternatives --set clang++ /usr/bin/clang++-22
+        sudo update-alternatives --install /usr/bin/clang   clang   /usr/bin/clang-19   1000
+        sudo update-alternatives --install /usr/bin/clang++ clang++ /usr/bin/clang++-19 1000
+        sudo update-alternatives --set clang   /usr/bin/clang-19
+        sudo update-alternatives --set clang++ /usr/bin/clang++-19
         clang --version
 
+        sudo add-apt-repository -y ppa:ubuntu-toolchain-r/test
         sudo apt update
-        sudo apt install -y g++-14
-        sudo update-alternatives --install /usr/bin/g++ g++ /usr/bin/g++-14 100
-        sudo update-alternatives --install /usr/bin/gcc gcc /usr/bin/gcc-14 100
+        sudo apt install -y g++-16
+        sudo update-alternatives --install /usr/bin/g++ g++ /usr/bin/g++-16 100
+        sudo update-alternatives --install /usr/bin/gcc gcc /usr/bin/gcc-16 100
 
-    - uses: KyleMayes/install-llvm-action@v2
-      with:
-        version: '20'
-      if: ${{ matrix.preset == 'win64-clang-libstdc++' }}
     - shell: pwsh
       if: ${{ matrix.preset == 'win64-clang-libstdc++' }}
       run: |+
-        choco install mingw --version=14.2.0 -y
-        echo "C:\ProgramData\mingw64\mingw64\bin" >> $env:GITHUB_PATH
+        $PSNativeCommandUseErrorActionPreference
+
+        if ("19.1.7" -eq "latest") {
+            $tag = gh release view -R mstorsjo/llvm-mingw --json tagName --jq .tagName
+        } else {
+            $re = "with LLVM $([regex]::Escape("19.1.7"))( final)?$"
+            $tag = (
+                gh release list -R mstorsjo/llvm-mingw -L 1000 --json tagName,name |
+                ConvertFrom-Json |
+                Where-Object { $_.name -match $re } |
+                Select-Object -First 1
+            ).tagName
+        }
+
+        if (-not $tag) {
+            throw "No llvm-mingw release with LLVM 19.1.7"
+        }
+
+        Invoke-WebRequest "https://github.com/mstorsjo/llvm-mingw/releases/download/$tag/llvm-mingw-$tag-ucrt-x86_64.zip" -OutFile llvm-mingw.zip
+        tar -xf llvm-mingw.zip -C C:\
+        "C:\llvm-mingw-$tag-ucrt-x86_64\bin" | Out-File -Append -Encoding utf8 $env:GITHUB_PATH
 
     - uses: ilammy/msvc-dev-cmd@v1
       if: ${{ matrix.preset == 'win64-clang-msvc' }}
-    - uses: KyleMayes/install-llvm-action@v2
-      with:
-        version: '20'
-      if: ${{ matrix.preset == 'win64-clang-msvc' }}
+    - if: ${{ matrix.preset == 'win64-clang-msvc' }}
+      run: |+
+        $PSNativeCommandUseErrorActionPreference = $true
+
+        if ("19.1.7" -eq "latest") {
+            $tag = gh release view -R llvm/llvm-project --json tagName --jq .tagName
+        } else {
+            $tag = "llvmorg-19.1.7"
+        }
+        $ver  = $tag -replace '^llvmorg-', ''
+        $name = "clang+llvm-$ver-x86_64-pc-windows-msvc"
+
+        Invoke-WebRequest "https://github.com/llvm/llvm-project/releases/download/$tag/$name.tar.xz" -OutFile llvm.tar.xz
+        cmd /c "7z x llvm.tar.xz -so | 7z x -si -ttar -oC:\ -y"
+        Move-Item "C:\$name" C:\LLVM
+        "C:\LLVM\bin" | Out-File -Append -Encoding utf8 $env:GITHUB_PATH
+
     - if: ${{ matrix.preset == 'unix-gcc-libstdc++' }}
       run: |+
+        sudo add-apt-repository -y ppa:ubuntu-toolchain-r/test
         sudo apt update
-        sudo apt install -y g++-14
-        sudo update-alternatives --install /usr/bin/g++ g++ /usr/bin/g++-14 100
-        sudo update-alternatives --install /usr/bin/gcc gcc /usr/bin/gcc-14 100
+        sudo apt install -y g++-16
+        sudo update-alternatives --install /usr/bin/g++ g++ /usr/bin/g++-16 100
+        sudo update-alternatives --install /usr/bin/gcc gcc /usr/bin/gcc-16 100
 
     - shell: pwsh
       if: ${{ matrix.preset == 'win64-gcc-libstdc++' }}
       run: |+
-        choco install mingw --version=14.2.0 -y
+        $PSNativeCommandUseErrorActionPreference = $true
+
+        choco install mingw --version=16.0.1 -y
         echo "C:\ProgramData\mingw64\mingw64\bin" >> $env:GITHUB_PATH
 
     - uses: ilammy/msvc-dev-cmd@v1
