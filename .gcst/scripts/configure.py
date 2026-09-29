@@ -54,19 +54,28 @@ def ignore_local_presets():
     return getArgs().ignore_local
 
 
-def run_from_file(script_name):
-    script_path = gcst.paths.ghci_dir/"scripts"/script_name
-    with open(script_path, 'r', encoding = 'utf-8') as script:
-        text = script.read()
-        if len(VARS) == 0:
-            return text + "\n\n"
+def process_gcstvars(text, text_name):
+    new_text = ''
+    splitted = text.split('\n')
+    for i, line in enumerate(splitted):
         for varname in VARS:
             if type(VARS[varname]) in [list, dict]:
                 continue
             vartag = f'{{gcst::{varname.lower()}}}'
-            if vartag in text:
-                text = text.replace(vartag, VARS[varname])
-                gcstout(f'-- -- "{vartag}" in "{script_name}"-script replaced with "{VARS[varname]}"')
+            if vartag in line:
+                line = line.replace(vartag, VARS[varname])
+                gcstout(f'-- Found "{vartag[1:-1]}" at {text_name}:{i+1}')
+        new_text += line
+        if i+1 < len(splitted):
+            new_text += '\n'
+
+    return new_text
+
+
+def run_from_file(script_name):
+    script_path = gcst.paths.ghci_dir/"scripts"/script_name
+    with open(script_path, 'r', encoding = 'utf-8') as script:
+        text = script.read()
         return text + "\n\n"
 
 
@@ -249,7 +258,7 @@ def presets_extract(presets, cmake_out, conan_out, out_ghci_steps, out_ghci_matr
             if key == ".vars":
                 global VARS
                 VARS = presets[key]
-                gcstout(f"-- Added global vars:")
+                gcstout(f"-- (service) Adding global vars:")
                 additional_vars = {}
                 for varkey in VARS:
                     if varkey.lower().endswith("version"):
@@ -278,19 +287,21 @@ def presets_extract(presets, cmake_out, conan_out, out_ghci_steps, out_ghci_matr
         cmake_preset_process(key, preset, cmake_out)
         conan_preset_process(key, preset, conan_out)
         githubci_preset_process(key, preset, out_ghci_steps, out_ghci_matrix)
+    gcstout()
 
 
 def presets_write(cmake_presets, conan_profiles, github_ci):
     if not getArgs().no_cmake:
         cmake_presets_file = gcst.paths.repo/'CMakePresets.json'
         gcstout()
-        gcstout(f"Saved CMake presets into \"{cmake_presets_file.relative_to(gcst.paths.repo)}\"")
+        gcstout(f"Saving CMake presets into \"{cmake_presets_file.relative_to(gcst.paths.repo)}\"")
         with open(cmake_presets_file, 'w', encoding = 'utf-8') as f:
             json.dump(cmake_presets, f, indent = 4)
+        gcstout()
 
     if not getArgs().no_conan:
         conan_profiles_dir = gcst.paths.repo/'conan'/'profiles'
-        gcstout(f"Saved conan profiles:")
+        gcstout(f"Saving conan profiles:")
         shutil.rmtree(conan_profiles_dir, ignore_errors = True)
         os.makedirs(conan_profiles_dir, exist_ok = True)
         for key in conan_profiles:
@@ -298,12 +309,19 @@ def presets_write(cmake_presets, conan_profiles, github_ci):
             gcstout(f"-- ./{profile_path.relative_to(gcst.paths.repo)}")
             with open(profile_path, 'w', encoding = 'utf-8') as f:
                 f.write(conan_profiles[key])
+        gcstout()
 
     if not getArgs().no_ghci:
         github_ci_file = gcst.paths.repo/".github"/"workflows"/"ci.yml"
+        gcstout(f"Saving GitHub CI workflows into \"{github_ci_file.relative_to(gcst.paths.repo)}\"")
+        gcstout("Processing global gcst-variables in saved ci.yml:")
         with open(github_ci_file, "w", encoding = "utf-8") as f:
             yaml.dump(github_ci, f)
-        gcstout(f"Saved GitHub CI workflows into \"{github_ci_file.relative_to(gcst.paths.repo)}\"")
+        with open(github_ci_file, "r", encoding = "utf-8") as f:
+            text = process_gcstvars(f.read(), 'ci.yml')
+        with open(github_ci_file, "w", encoding = "utf-8") as f:
+            f.write(text)
+        gcstout()
 
 
 def main():
@@ -327,7 +345,6 @@ def main():
     steps.extend(presets[".common-post"])
 
     presets_write(CMAKE_PRESETS, CONAN_PROFILES, github_ci)
-    gcstout()
     gcstout("Configuring done.")
     print(" ===========================================================================")
 
