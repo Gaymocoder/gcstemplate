@@ -184,7 +184,7 @@
         },
         "github_ci": [
             {
-                "run-files": ["clang-mingw.ps1"],
+                "run-files": ["clang-msvc.ps1", "gcc.ps1"],
                 "shell": "pwsh"
             }
         ]

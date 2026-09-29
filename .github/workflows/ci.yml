@@ -98,24 +98,22 @@ jobs:
         $PSNativeCommandUseErrorActionPreference = $true
 
         if ("19.1.7" -eq "latest") {
-            $tag = gh release view -R mstorsjo/llvm-mingw --json tagName --jq .tagName
+            $tag = gh release view -R llvm/llvm-project --json tagName --jq .tagName
         } else {
-            $re = "with LLVM $([regex]::Escape("19.1.7"))( final)?$"
-            $tag = (
-                gh release list -R mstorsjo/llvm-mingw -L 1000 --json tagName,name |
-                ConvertFrom-Json |
-                Where-Object { $_.name -match $re } |
-                Select-Object -First 1
-            ).tagName
+            $tag = "llvmorg-19.1.7"
         }
+        $ver  = $tag -replace '^llvmorg-', ''
+        $name = "clang+llvm-$ver-x86_64-pc-windows-msvc"
 
-        if (-not $tag) {
-            throw "No llvm-mingw release with LLVM 19.1.7"
-        }
+        Invoke-WebRequest "https://github.com/llvm/llvm-project/releases/download/$tag/$name.tar.xz" -OutFile llvm.tar.xz
+        cmd /c "7z x llvm.tar.xz -so | 7z x -si -ttar -oC:\ -y"
+        Move-Item "C:\$name" C:\LLVM
+        "C:\LLVM\bin" | Out-File -Append -Encoding utf8 $env:GITHUB_PATH
 
-        Invoke-WebRequest "https://github.com/mstorsjo/llvm-mingw/releases/download/$tag/llvm-mingw-$tag-ucrt-x86_64.zip" -OutFile llvm-mingw.zip
-        tar -xf llvm-mingw.zip -C C:\
-        "C:\llvm-mingw-$tag-ucrt-x86_64\bin" | Out-File -Append -Encoding utf8 $env:GITHUB_PATH
+        $PSNativeCommandUseErrorActionPreference = $true
+
+        choco install mingw --version=16.1.0 -y
+        echo "C:\ProgramData\mingw64\mingw64\bin" >> $env:GITHUB_PATH
 
     - uses: ilammy/msvc-dev-cmd@v1
       with:
