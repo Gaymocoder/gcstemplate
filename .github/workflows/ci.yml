@@ -149,7 +149,7 @@ jobs:
       run: |+
         $PSNativeCommandUseErrorActionPreference = $true
 
-        choco install mingw --version=16.0.1 -y
+        choco install mingw --version=16.1.0 -y
         echo "C:\ProgramData\mingw64\mingw64\bin" >> $env:GITHUB_PATH
 
     - uses: ilammy/msvc-dev-cmd@v1
