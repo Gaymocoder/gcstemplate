@@ -100,7 +100,7 @@ def conan_preset_process(key, preset, out_profiles):
         if not (get_conan_version_from_gvars(settings, compver, "compiler.version")):
             sys.exit(1)
             
-    if "compiler.runtime" in settings and "compiler.runtime_version" not in settings:
+    if settings["compiler"] == 'clang' and "compiler.runtime" in settings and "compiler.runtime_version" not in settings:
         runtimever = "MSVC_RUNTIME_VERSION"
         if not (get_conan_version_from_gvars(settings, runtimever, "compiler.runtime_version", make_major = False)):
             sys.exit(2)

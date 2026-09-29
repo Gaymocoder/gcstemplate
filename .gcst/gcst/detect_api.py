@@ -3,7 +3,21 @@ import sys
 import json
 import subprocess
 
+from pathlib import Path
+
+def __verinit(cls):
+    pf86_path = os.environ.get("ProgramFiles(x86)")
+    if pf86_path:
+        vswhere = Path(pf86_path)/"Microsoft Visual Studio"/"Installer"/"vswhere.exe"
+        if vswhere.exists():
+            cls.vswhere = vswhere
+
+    return cls
+
+@__verinit
 class versions:
+    vswhere = None
+
     def __new__(cls, fullver):
         for char in fullver:
             if char not in ['v', '.']:
@@ -43,6 +57,23 @@ class versions:
     @classmethod
     def msvc(cls):
         pass
+
+    @classmethod
+    def msvc_path(cls):
+        if not cls.vswhere:
+            return None
+
+        vs_path = subprocess.check_output([
+            cls.vswhere,
+            "-latest",
+            "-products", "*",
+            "-property", "installationPath",
+            "-requires", "Microsoft.VisualStudio.Component.VC.Tools.x86.x64"
+        ], text = True).strip()
+
+        if not vs_path:
+            return None
+        return Path(vs_path).resolve()
 
     @classmethod
     def clang_cl(cls):

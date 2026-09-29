@@ -113,9 +113,13 @@ def conan_install(profile):
         f"--output-folder={gcst.paths.build_dir}",
         f"--out-file={gcst.paths.build_dir / 'graph.json'}",
         "--build=missing",
-        "-c tools.system.package_manager:mode=install",
-        "-c tools.system.package_manager:sudo=True"
+        "-c", "tools.system.package_manager:mode=install",
+        "-c", "tools.system.package_manager:sudo=True"
     ]
+
+    msvc_path = gcst.versions.msvc_path()
+    if msvc_path:
+        command.extend(["-c", f"tools.microsoft.msbuild:installation_path={msvc_path}"])
     return subprocess.run(command, check = False)
 
     
