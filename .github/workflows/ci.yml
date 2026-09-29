@@ -22,15 +22,18 @@ jobs:
         - preset: unix-clang-libstdc++
           os: ubuntu-latest
           build: sh build.sh
+        - preset: unix-gcc-libstdc++
+          os: ubuntu-latest
+          build: sh build.sh
+        - preset: win64-clang-libc++
+          os: windows-latest
+          build: ./build.bat
         - preset: win64-clang-libstdc++
           os: windows-latest
           build: ./build.bat
         - preset: win64-clang-msvc
           os: windows-latest
           build: ./build.bat
-        - preset: unix-gcc-libstdc++
-          os: ubuntu-latest
-          build: sh build.sh
         - preset: win64-gcc-libstdc++
           os: windows-latest
           build: ./build.bat
@@ -92,6 +95,39 @@ jobs:
         sudo update-alternatives --install /usr/bin/g++ g++ /usr/bin/g++-16 100
         sudo update-alternatives --install /usr/bin/gcc gcc /usr/bin/gcc-16 100
 
+    - if: ${{ matrix.preset == 'unix-gcc-libstdc++' }}
+      run: |+
+        sudo add-apt-repository -y ppa:ubuntu-toolchain-r/test
+        sudo apt update
+        sudo apt install -y g++-16
+        sudo update-alternatives --install /usr/bin/g++ g++ /usr/bin/g++-16 100
+        sudo update-alternatives --install /usr/bin/gcc gcc /usr/bin/gcc-16 100
+
+    - shell: pwsh
+      if: ${{ matrix.preset == 'win64-clang-libc++' }}
+      run: |+
+        $PSNativeCommandUseErrorActionPreference = $true
+
+        if ("19.1.7" -eq "latest") {
+            $tag = gh release view -R mstorsjo/llvm-mingw --json tagName --jq .tagName
+        } else {
+            $re = "with LLVM $([regex]::Escape("19.1.7"))( final)?$"
+            $tag = (
+                gh release list -R mstorsjo/llvm-mingw -L 1000 --json tagName,name |
+                ConvertFrom-Json |
+                Where-Object { $_.name -match $re } |
+                Select-Object -First 1
+            ).tagName
+        }
+
+        if (-not $tag) {
+            throw "No llvm-mingw release with LLVM 19.1.7"
+        }
+
+        Invoke-WebRequest "https://github.com/mstorsjo/llvm-mingw/releases/download/$tag/llvm-mingw-$tag-ucrt-x86_64.zip" -OutFile llvm-mingw.zip
+        tar -xf llvm-mingw.zip -C C:\
+        "C:\llvm-mingw-$tag-ucrt-x86_64\bin" | Out-File -Append -Encoding utf8 $env:GITHUB_PATH
+
     - shell: pwsh
       if: ${{ matrix.preset == 'win64-clang-libstdc++' }}
       run: |+
@@ -135,14 +171,6 @@ jobs:
         cmd /c "7z x llvm.tar.xz -so | 7z x -si -ttar -oC:\ -y"
         Move-Item "C:\$name" C:\LLVM
         "C:\LLVM\bin" | Out-File -Append -Encoding utf8 $env:GITHUB_PATH
-
-    - if: ${{ matrix.preset == 'unix-gcc-libstdc++' }}
-      run: |+
-        sudo add-apt-repository -y ppa:ubuntu-toolchain-r/test
-        sudo apt update
-        sudo apt install -y g++-16
-        sudo update-alternatives --install /usr/bin/g++ g++ /usr/bin/g++-16 100
-        sudo update-alternatives --install /usr/bin/gcc gcc /usr/bin/gcc-16 100
 
     - shell: pwsh
       if: ${{ matrix.preset == 'win64-gcc-libstdc++' }}

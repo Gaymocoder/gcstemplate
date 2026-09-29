@@ -153,6 +153,70 @@
             }
         ]
     },
+
+    "unix-gcc-libstdc++": {
+        "cmake": {
+            "description": "GNU C Compiler for Unix Makefiles",
+            "generator": "Unix Makefiles",
+            "binaryDir": "${sourceDir}/build",
+            "cacheVariables": {
+                "CMAKE_C_COMPILER": "gcc",
+                "CMAKE_CXX_COMPILER": "g++",
+                "CMAKE_TOOLCHAIN_FILE": "${sourceDir}/build/conan_toolchain.cmake",
+                "CMAKE_BUILD_TYPE": "Release"
+            }
+        },
+        "conan": {
+            "settings": {
+                "os": "Linux",
+                "arch": "x86_64",
+                "compiler": "gcc",
+                "compiler.libcxx": "libstdc++11",
+                "build_type": "Release"
+            }
+        },
+        "github_ci": [
+            {
+                "run-files": ["gcc.sh"]
+            }
+        ]
+    },
+
+    "win64-clang-libc++": {
+        "cmake": {
+            "description": "Clang + libc++",
+            "generator": "MinGW Makefiles",
+            "binaryDir": "${sourceDir}/build",
+            "cacheVariables": {
+                "CMAKE_C_COMPILER": "clang",
+                "CMAKE_CXX_COMPILER": "clang++",
+                "CMAKE_TOOLCHAIN_FILE": "${sourceDir}/build/conan_toolchain.cmake",
+                "CMAKE_BUILD_TYPE": "Release"
+            }
+        },
+        "conan": {
+            "settings": {
+                "os": "Windows",
+                "arch": "x86_64",
+                "compiler": "clang",
+                "compiler.libcxx": "libc++",
+                "build_type": "Release"
+            },
+            "conf": {
+                "tools.build:cflags": "[\"--target=x86_64-w64-mingw32\"]",
+                "tools.build:cxxflags": "[\"--target=x86_64-w64-mingw32\"]",
+                "tools.build:exelinkflags": "[\"-fuse-ld=lld\", \"--target=x86_64-w64-mingw32\"]",
+                "tools.build:sharedlinkflags": "[\"-fuse-ld=lld\", \"--target=x86_64-w64-mingw32\"]",
+                "tools.build:compiler_executables": "{\"c\": \"clang\", \"cpp\": \"clang++\"}"
+            }
+        },
+        "github_ci": [
+            {
+                "run-files": ["clang-mingw.ps1"],
+                "shell": "pwsh"
+            }
+        ]
+    },
     
     "win64-clang-libstdc++": {
         "cmake": {
@@ -221,34 +285,6 @@
             },
             {
                 "run-files": ["clang-msvc.ps1"]
-            }
-        ]
-    },
-
-    "unix-gcc-libstdc++": {
-        "cmake": {
-            "description": "GNU C Compiler for Unix Makefiles",
-            "generator": "Unix Makefiles",
-            "binaryDir": "${sourceDir}/build",
-            "cacheVariables": {
-                "CMAKE_C_COMPILER": "gcc",
-                "CMAKE_CXX_COMPILER": "g++",
-                "CMAKE_TOOLCHAIN_FILE": "${sourceDir}/build/conan_toolchain.cmake",
-                "CMAKE_BUILD_TYPE": "Release"
-            }
-        },
-        "conan": {
-            "settings": {
-                "os": "Linux",
-                "arch": "x86_64",
-                "compiler": "gcc",
-                "compiler.libcxx": "libstdc++11",
-                "build_type": "Release"
-            }
-        },
-        "github_ci": [
-            {
-                "run-files": ["gcc.sh"]
             }
         ]
     },
