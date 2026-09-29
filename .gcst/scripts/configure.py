@@ -26,6 +26,7 @@ CMAKE_PRESETS = {
     },
     "configurePresets": []
 }
+TAG_RE = re.compile(r'\{gcst::([^{}]+)\}')
 
 
 yaml = YAML()
@@ -55,21 +56,33 @@ def ignore_local_presets():
 
 
 def process_gcstvars(text, text_name):
-    new_text = ''
-    splitted = text.split('\n')
-    for i, line in enumerate(splitted):
-        for varname in VARS:
-            if type(VARS[varname]) in [list, dict]:
-                continue
-            vartag = f'{{gcst::{varname.lower()}}}'
-            if vartag in line:
-                line = line.replace(vartag, VARS[varname])
-                gcstout(f'-- Found "{vartag[1:-1]}" at {text_name}:{i+1}')
-        new_text += line
-        if i+1 < len(splitted):
-            new_text += '\n'
+    if '{gcst::' not in text:
+        return text
 
-    return new_text
+    out = []
+    values = {
+        k.lower(): v for k,v in VARS.items()
+        if not isinstance(v, (list, dict))
+    }
+
+    for i, line in enumerate(text.split('\n'), 1):
+        if '{gcst::' not in line:
+            out.append(line)
+            continue
+
+        found = set()
+        def replace(match_obj):
+            name = match_obj.group(1)
+            if name not in values:
+                return match_obj.group(0)
+            if name not in found:
+                found.add(name)
+                gcstout(f'-- Found "{name}" at {text_name}:{i}')
+            return str(values[name])
+
+        out.append(TAG_RE.sub(replace, line))
+
+    return '\n'.join(out)
 
 
 def run_from_file(script_name):
