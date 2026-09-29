@@ -18,7 +18,7 @@ def __verinit(cls):
 class versions:
     vswhere = None
 
-    def __new__(cls, fullver):
+    def __new__(cls, fullver: str):
         for char in fullver:
             if char not in ['v', '.']:
                 break
@@ -28,7 +28,7 @@ class versions:
             return super().__new__(cls)
         return None
 
-    def __init__(self, fullver):
+    def __init__(self, fullver: str):
         self._fullver = fullver
 
     @property
@@ -41,6 +41,14 @@ class versions:
         if mjend == -1:
             return self._fullver
         return self._fullver[:mjend]
+
+    @property
+    def minor(self):
+        mnbegin = self._fullver.find('.') + 1
+        mnend = self._fullver.find('.', mnbegin)
+        if mnend == -1:
+            mnend = len(self._fullver)
+        return self._fullver[mnbegin:mnend]
 
     @classmethod
     def clang(cls):

@@ -1,9 +1,9 @@
 $PSNativeCommandUseErrorActionPreference = $true
 
-if ("{gcst::clang_full_version_github_ci}" -eq "latest") {
+if ("{gcst::clang_github_ci_full_version}" -eq "latest") {
     $tag = gh release view -R llvm/llvm-project --json tagName --jq .tagName
 } else {
-    $tag = "llvmorg-{gcst::clang_full_version_github_ci}"
+    $tag = "llvmorg-{gcst::clang_github_ci_full_version}"
 }
 $ver  = $tag -replace '^llvmorg-', ''
 $name = "clang+llvm-$ver-x86_64-pc-windows-msvc"

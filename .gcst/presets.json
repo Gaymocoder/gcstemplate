@@ -9,12 +9,12 @@
             "github_ci": "19.1.7"
         },
         "MSVC_VERSION": {
-            "local": "194",
-            "github_ci": "194"
+            "local": "19.44",
+            "github_ci": "19.44"
         },
         "MSVC_RUNTIME_VERSION": {
-            "local": "v143",
-            "github_ci": "v143"
+            "local": "14.44",
+            "github_ci": "14.44"
         }
     },
 

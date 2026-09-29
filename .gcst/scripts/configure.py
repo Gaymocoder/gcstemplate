@@ -75,17 +75,17 @@ def cmake_preset_process(key, preset, out_presets):
     out_presets["configurePresets"].append(cmake_preset)
 
 
-def get_conan_version_from_gvars(settings, varname, settname, make_major = True):
+def get_conan_version_from_gvars(settings, varname, settname):
     if not (varname in VARS and 'local' in VARS[varname] and 'github_ci' in VARS[varname]):
         gcstout(f'-- -- ERROR: no version for "{settname}" is specified in conan. Aborting')
         return None
 
-    if 'GITHUB_PATH' in os.environ.copy():
-        VARS[varname]['local'] = VARS[varname]['github_ci']
-    settings[settname] = VARS[varname]["local"]
+    env = 'github_ci' if 'GITHUB_PATH' in os.environ.copy() else 'local'
+    settings[settname] = gcst.versions(VARS[varname][env]).major
 
-    if make_major:
-        settings[settname] = gcst.versions(settings[settname]).major
+    if varname.lower().startswith('msvc'):
+        settings[settname] = VARS[f'{varname[:-8]}_{env.upper()}_CONAN_VERSION']
+
     return settings[settname]
     
 def conan_preset_process(key, preset, out_profiles):
@@ -102,7 +102,7 @@ def conan_preset_process(key, preset, out_profiles):
             
     if settings["compiler"] == 'clang' and "compiler.runtime" in settings and "compiler.runtime_version" not in settings:
         runtimever = "MSVC_RUNTIME_VERSION"
-        if not (get_conan_version_from_gvars(settings, runtimever, "compiler.runtime_version", make_major = False)):
+        if not (get_conan_version_from_gvars(settings, runtimever, "compiler.runtime_version")):
             sys.exit(2)
 
     for namespace in preset["conan"]:
@@ -251,20 +251,26 @@ def presets_extract(presets, cmake_out, conan_out, out_ghci_steps, out_ghci_matr
                 VARS = presets[key]
                 gcstout(f"-- Added global vars:")
                 additional_vars = {}
-                for key in VARS:
-                    if key.lower().endswith("version"):
+                for varkey in VARS:
+                    if varkey.lower().endswith("version"):
                         buf = {}
-                        key_fv = f'{key[:-8]}_FULL_VERSION'
-                        key_mv = f'{key[:-8]}_MAJOR_VERSION'
-                        buf[f'{key_fv}_LOCAL'] = VARS[key]['local']
-                        buf[f'{key_fv}_GITHUB_CI'] = VARS[key]['github_ci']
-                        buf[f'{key_mv}_LOCAL'] = gcst.versions(VARS[key]['local']).major
-                        buf[f'{key_mv}_GITHUB_CI'] = gcst.versions(VARS[key]['github_ci']).major
-                        for key in buf:
-                            gcstout(f"-- -- {key}: {buf[key]}")
+                        tag = varkey[:-8]
+                        for envkey in ['LOCAL', 'GITHUB_CI']:
+                            version = gcst.versions(VARS[varkey][envkey.lower()])
+                            buf[f'{tag}_{envkey}_FULL_VERSION'] = version.full
+                            buf[f'{tag}_{envkey}_MAJOR_VERSION'] = version.major
+                            if varkey.lower().startswith('msvc'):
+                                conanized = version.major + version.minor[0]
+                                if 'runtime' in varkey.lower():
+                                    conanized = 'v' + conanized
+                                buf[f'{tag}_{envkey}_CONAN_VERSION'] = conanized
+                            buf[f'{tag}_{envkey}_FULL_VERSION'] = VARS[varkey][envkey.lower()]
+
+                        for varkey in buf:
+                            gcstout(f"-- -- {varkey}: {buf[varkey]}")
                         additional_vars.update(buf)
                         continue
-                    gcstout(f"-- -- {key}: {VARS[key]}")
+                    gcstout(f"-- -- {varkey}: {VARS[varkey]}")
                 VARS.update(additional_vars)
             continue
         gcstout(f"-- {key}")

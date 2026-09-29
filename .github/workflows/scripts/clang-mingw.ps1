@@ -1,9 +1,9 @@
 $PSNativeCommandUseErrorActionPreference
 
-if ("{gcst::clang_full_version_github_ci}" -eq "latest") {
+if ("{gcst::clang_github_ci_full_version}" -eq "latest") {
     $tag = gh release view -R mstorsjo/llvm-mingw --json tagName --jq .tagName
 } else {
-    $re = "with LLVM $([regex]::Escape("{gcst::clang_full_version_github_ci}"))( final)?$"
+    $re = "with LLVM $([regex]::Escape("{gcst::clang_github_ci_full_version}"))( final)?$"
     $tag = (
         gh release list -R mstorsjo/llvm-mingw -L 1000 --json tagName,name |
         ConvertFrom-Json |
@@ -13,7 +13,7 @@ if ("{gcst::clang_full_version_github_ci}" -eq "latest") {
 }
 
 if (-not $tag) {
-    throw "No llvm-mingw release with LLVM {gcst::clang_full_version_github_ci}"
+    throw "No llvm-mingw release with LLVM {gcst::clang_github_ci_full_version}"
 }
 
 Invoke-WebRequest "https://github.com/mstorsjo/llvm-mingw/releases/download/$tag/llvm-mingw-$tag-ucrt-x86_64.zip" -OutFile llvm-mingw.zip
