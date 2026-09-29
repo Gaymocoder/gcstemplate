@@ -9,6 +9,7 @@ on:
 jobs:
   build:
     env:
+      GH_TOKEN: ${{ github.token }}
       GCST_WERROR: ON
       PYTHONPATH: ${{ github.workspace }}/.gcst
     strategy:
