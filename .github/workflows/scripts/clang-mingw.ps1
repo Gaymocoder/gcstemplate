@@ -1,4 +1,4 @@
-$PSNativeCommandUseErrorActionPreference
+$PSNativeCommandUseErrorActionPreference = $true
 
 if ("{gcst::clang_github_ci_full_version}" -eq "latest") {
     $tag = gh release view -R mstorsjo/llvm-mingw --json tagName --jq .tagName

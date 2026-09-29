@@ -95,7 +95,7 @@ jobs:
     - shell: pwsh
       if: ${{ matrix.preset == 'win64-clang-libstdc++' }}
       run: |+
-        $PSNativeCommandUseErrorActionPreference
+        $PSNativeCommandUseErrorActionPreference = $true
 
         if ("19.1.7" -eq "latest") {
             $tag = gh release view -R mstorsjo/llvm-mingw --json tagName --jq .tagName
