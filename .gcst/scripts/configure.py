@@ -72,12 +72,12 @@ def process_gcstvars(text, text_name):
 
         found = set()
         def replace(match_obj):
-            name = match_obj.group(1)
+            name = match_obj.group(1).lower()
             if name not in values:
                 return match_obj.group(0)
             if name not in found:
                 found.add(name)
-                gcstout(f'-- Found "{name}" at {text_name}:{i}')
+                gcstout(f'-- {text_name}:{i} | Found "{name}" (replaced with "{values[name]}")')
             return str(values[name])
 
         out.append(TAG_RE.sub(replace, line))

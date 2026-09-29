@@ -118,6 +118,8 @@ jobs:
         "C:\llvm-mingw-$tag-ucrt-x86_64\bin" | Out-File -Append -Encoding utf8 $env:GITHUB_PATH
 
     - uses: ilammy/msvc-dev-cmd@v1
+      with:
+        toolset: '14.44'
       if: ${{ matrix.preset == 'win64-clang-msvc' }}
     - if: ${{ matrix.preset == 'win64-clang-msvc' }}
       run: |+
@@ -153,6 +155,8 @@ jobs:
         echo "C:\ProgramData\mingw64\mingw64\bin" >> $env:GITHUB_PATH
 
     - uses: ilammy/msvc-dev-cmd@v1
+      with:
+        toolset: '14.44'
       if: ${{ matrix.preset == 'win64-msvc-msvcstl' }}
     - name: Build
       run: ${{ matrix.build }} --preset ${{ matrix.preset }}

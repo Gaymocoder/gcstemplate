@@ -214,7 +214,10 @@
         },
         "github_ci": [
             {
-                "uses": "ilammy/msvc-dev-cmd@v1"
+                "uses": "ilammy/msvc-dev-cmd@v1",
+                "with": {
+                    "toolset": "{gcst::MSVC_RUNTIME_GITHUB_CI_FULL_VERSION}"
+                }
             },
             {
                 "run-files": ["clang-msvc.ps1"]
@@ -304,7 +307,10 @@
         },
         "github_ci": [
             {
-                "uses": "ilammy/msvc-dev-cmd@v1"
+                "uses": "ilammy/msvc-dev-cmd@v1",
+                "with": {
+                    "toolset": "{gcst::MSVC_RUNTIME_GITHUB_CI_FULL_VERSION}"
+                }
             }
         ]
     }
