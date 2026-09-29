@@ -11,6 +11,10 @@
         "MSVC_VERSION": {
             "local": "194",
             "github_ci": "194"
+        },
+        "MSVC_RUNTIME_VERSION": {
+            "local": "v143",
+            "github_ci": "v143"
         }
     },
 
@@ -205,7 +209,6 @@
                 "compiler": "clang",
                 "compiler.runtime": "dynamic",
                 "compiler.runtime_type": "Release",
-                "compiler.runtime_version": "v143",
                 "build_type": "Release"
             }
         },

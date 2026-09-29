@@ -5,6 +5,11 @@ import subprocess
 
 class versions:
     def __new__(cls, fullver):
+        for char in fullver:
+            if char not in ['v', '.']:
+                break
+            fullver = fullver[1:]
+
         if fullver.replace('.', '').isdigit():
             return super().__new__(cls)
         return None

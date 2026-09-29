@@ -74,6 +74,19 @@ def cmake_preset_process(key, preset, out_presets):
     cmake_preset = {"name": key, **preset["cmake"]}
     out_presets["configurePresets"].append(cmake_preset)
 
+
+def get_conan_version_from_gvars(settings, varname, settname, make_major = True):
+    if not (varname in VARS and 'local' in VARS[varname] and 'github_ci' in VARS[varname]):
+        gcstout(f'-- -- ERROR: no version for "{settname}" is specified in conan. Aborting')
+        return None
+
+    if 'GITHUB_PATH' in os.environ.copy():
+        VARS[varname]['local'] = VARS[varname]['github_ci']
+    settings[settname] = VARS[varname]["local"]
+
+    if make_major:
+        settings[settname] = gcst.versions(settings[settname]).major
+    return settings[settname]
     
 def conan_preset_process(key, preset, out_profiles):
     out_profiles[key] = ''
@@ -84,13 +97,13 @@ def conan_preset_process(key, preset, out_profiles):
     settings = preset['conan']['settings']
     if 'compiler.version' not in settings:
         compver = f'{settings["compiler"].upper()}_VERSION'
-        if not (compver in VARS and 'local' in VARS[compver] and 'github_ci' in VARS[compver]):
-            gcstout('-- -- ERROR: no version for compiler is specified in conan. Aborting')
+        if not (get_conan_version_from_gvars(settings, compver, "compiler.version")):
+            sys.exit(1)
+            
+    if "compiler.runtime" in settings and "compiler.runtime_version" not in settings:
+        runtimever = "MSVC_RUNTIME_VERSION"
+        if not (get_conan_version_from_gvars(settings, runtimever, "compiler.runtime_version", make_major = False)):
             sys.exit(2)
-
-        if 'GITHUB_PATH' in os.environ.copy():
-            VARS[compver]["local"] = VARS[compver]["github_ci"]
-        settings["compiler.version"] = gcst.versions(VARS[compver]["local"]).major
 
     for namespace in preset["conan"]:
         out_profiles[key] += f'[{namespace}]\n'
