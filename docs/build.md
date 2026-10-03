@@ -2,7 +2,7 @@
 
 <sub>[README](../README.md) · [Architecture](architecture.md) · [Building](build.md) · [Presets](presets.md) · [Local presets](local-presets.md) · [Dependencies](dependencies.md) · [CMake modules](cmake.md) · [CI](ci.md) · [Updating](updating.md) · [Scripting](scripting.md)</sub>
 
-Everything about producing a binary: the build scripts, their options, the stages a build goes through and where the results land.
+Everything about producing a binary: the build scripts, their options, the stages a build goes through and where the results land. The same scripts also [update the template](updating.md).
 
 - [Entry points](#entry-points)
 - [Options](#options)
@@ -33,10 +33,12 @@ build.bat [options]
 | `--no-conan` | Skip generating Conan profiles, [exporting recipes](dependencies.md#local-recipes) and `conan install` |
 | `--no-cmake` | Skip generating `CMakePresets.json`, CMake configure and build |
 | `--no-ghci` | Don't regenerate `.github/workflows/ci.yml` — see [Keeping CI in sync](local-presets.md#keeping-ci-in-sync) |
+| `-u`, `--update` | Update the template instead of building — see [Updating the template](updating.md#updating). Build options are ignored |
+| `--local` | With `--update`: don't pull the template submodule first |
 
 ## Default preset
 
-Every build that reaches the Conan stage stores its preset name in `.gcst/.default`, which is ignored by git. A build without `--preset` reads it from there; if the file doesn't exist either, the build stops with exit code `1`.
+Every build that reaches the Conan stage stores its preset name in `.gcst/.default`, which is ignored by git. A build without `--preset` reads it from there; if the file doesn't exist either, the build stops with exit code `2`.
 
 ## Stages and exit codes
 
@@ -55,13 +57,14 @@ Each stage fails with its own exit code and prints the command it ran.
 | Code | Failed stage | Where to look |
 |---|---|---|
 | `0` | — (success) | |
-| `1` | No preset given and no default preset remembered | [Default preset](#default-preset) |
-| `2` | Generating presets (`configure.py`) | [Presets](presets.md), [Local presets](local-presets.md) |
-| `3` | Unknown preset: no Conan profile with that name | [Toolchains](../README.md#toolchains) |
-| `4` | Exporting local recipes | [Local recipes](dependencies.md#local-recipes) |
-| `5` | `conan install` | [Dependencies](dependencies.md) |
-| `6` | CMake configure | [The `cmake` section](presets.md#the-cmake-section), [CMake modules](cmake.md) |
-| `7` | CMake build | your code, [Warnings](cmake.md#warnings) |
+| `1` | `--update`: pulling the template submodule or updating failed | [Updating the template](updating.md#updating) |
+| `2` | No preset given and no default preset remembered | [Default preset](#default-preset) |
+| `3` | Generating presets (`configure.py`) | [Presets](presets.md), [Local presets](local-presets.md) |
+| `4` | Unknown preset: no Conan profile with that name | [Toolchains](../README.md#toolchains) |
+| `5` | Exporting local recipes | [Local recipes](dependencies.md#local-recipes) |
+| `6` | `conan install` | [Dependencies](dependencies.md) |
+| `7` | CMake configure | [The `cmake` section](presets.md#the-cmake-section), [CMake modules](cmake.md) |
+| `8` | CMake build | your code, [Warnings](cmake.md#warnings) |
 
 The CMake build always runs as `cmake --build build --config Release`.
 
@@ -98,4 +101,4 @@ Every build regenerates presets first. To regenerate without building:
 PYTHONPATH=.gcst python3 .gcst/scripts/configure.py
 ```
 
-It accepts `-pl`, `-il`, `--no-cmake`, `--no-conan` and `--no-ghci` with the same meaning as in [Options](#options). What it produces is listed in [Generated and handwritten files](architecture.md#generated-and-handwritten-files).
+It accepts `-pl`, `-il`, `--no-cmake`, `--no-conan` and `--no-ghci` with the same meaning as in [Options](#options). What it produces is listed in [Generated and handwritten files](architecture.md#generated-and-handwritten-files); which compiler versions end up in the profiles and in `ci.yml` is decided by [`.vars`](presets.md#toolchain-versions).

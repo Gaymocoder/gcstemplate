@@ -15,7 +15,7 @@ Pushes to `master` and `stable`, pull requests and manual dispatch. Triggers liv
 
 ## Build job
 
-One job per preset, with `fail-fast: false` so a broken toolchain doesn't hide the state of the others. The whole matrix builds with [`GCST_WERROR=ON`](build.md#warnings-as-errors). Each job:
+One job per preset, with `fail-fast: false` so a broken toolchain doesn't hide the state of the others. The whole matrix builds with [`GCST_WERROR=ON`](build.md#warnings-as-errors), and `GH_TOKEN` is set from `github.token`, because the Windows toolchain scripts look their releases up with the `gh` CLI. Each job:
 
 | # | Step | Comes from |
 |---|---|---|
@@ -26,11 +26,15 @@ One job per preset, with `fail-fast: false` so a broken toolchain doesn't hide t
 | 5 | Build with the preset | generated `Build` step |
 | 6 | Record the result for the [verdict](#verdicts-in-git-log), save the Conan cache | `.common-post` |
 
+Which compiler versions the toolchain steps install is decided by [`.vars`](presets.md#toolchain-versions), not by the steps themselves.
+
 `.common-pre` and `.common-post` are [service keys](presets.md#service-keys) of `presets.json`.
 
 ## Conan cache
 
 Installed packages are saved per preset after a successful dependency install and restored on the next run. The cache key covers `conanfile.py`, the preset's Conan profile and [`recipes/`](dependencies.md#local-recipes). When any of them changes, the latest cache of the preset is restored as a base and saved again under the new key.
+
+Only the packages of the current dependency graph go into the cache: the job turns [`build/graph.json`](dependencies.md#how-conan-install-runs) into a package list with `conan list --graph` and hands that list to `conan cache save`.
 
 ## Verdicts in `git log`
 
@@ -41,6 +45,7 @@ After the matrix finishes, the `notes` job collects the results and attaches the
  - unix-clang-libc++        ✓
  - unix-clang-libstdc++     ✓
  - unix-gcc-libstdc++       ✓
+ - win64-clang-libc++       ✓
  - win64-clang-libstdc++    ✓
  - win64-clang-msvc         ✓
  - win64-gcc-libstdc++      ✗
@@ -48,6 +53,8 @@ After the matrix finishes, the `notes` job collects the results and attaches the
 ```
 
 `✓` is success, `✗` is failure, anything else is shown as `? (<status>)`. Notes live beside the commit and don't change its hash. The job needs `contents: write`, which it declares itself.
+
+The job is skipped for pull requests. A workflow triggered by a pull request from a fork gets a read-only token, so it couldn't write the note anyway — and `github.sha` there is a temporary merge commit that never lands in the history. The build results are still visible in the pull request itself, and the note is written when the merged commit is pushed.
 
 To see them locally:
 

@@ -34,7 +34,7 @@ Prepares any target — executable, library or object library:
 - adds `GCST_INCLUDE_DIRS` as a public include directory;
 - applies the [warning set](#warnings) for the current compiler;
 - applies [per-configuration optimization](#optimization);
-- on MinGW, links `stdc++exp` for C++23 targets, which `std::print` needs there;
+- on Windows with libstdc++, links `stdc++exp` for C++23 targets, which `std::print` needs there;
 - prints the resulting compile options and linked libraries to the configure log — call it after `target_link_libraries()` to see them.
 
 ```cmake
@@ -55,7 +55,7 @@ Turns a library target into an exportable library assembled from object modules:
 - creates an alias from the target name split at the first underscore: `gcst_utils` → `gcst::utils`; a name without underscores gets `name::name`;
 - sets `EXPORT_NAME` to the part after the prefix;
 - adds `GCST_INCLUDE_DIRS` for the build tree and `include` for the install tree as public include directories;
-- applies [warnings](#warnings) and [optimization](#optimization), and on MinGW passes `stdc++exp` on to consumers.
+- applies [warnings](#warnings) and [optimization](#optimization), and on MinGW with libstdc++ passes `stdc++exp` on to consumers.
 
 ```cmake
 add_library(gcst_utils_exstd OBJECT src/exstd.cpp)

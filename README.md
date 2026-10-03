@@ -2,7 +2,7 @@
 
 # gcstemplate
 
-**A cross-platform C++23 project template where one preset file drives CMake, Conan 2 and GitHub Actions across seven toolchains.**
+**A cross-platform C++23 project template where one preset file drives CMake, Conan 2 and GitHub Actions across eight toolchains.**
 
 [![CI](https://github.com/Gaymocoder/gcstemplate/actions/workflows/ci.yml/badge.svg?branch=master)](https://github.com/Gaymocoder/gcstemplate/actions/workflows/ci.yml)
 [![Latest tag](https://img.shields.io/github/v/tag/Gaymocoder/gcstemplate?label=version)](https://github.com/Gaymocoder/gcstemplate/tags)
@@ -41,13 +41,14 @@ gcstemplate is a starting point for C++ projects that have to build everywhere f
 ## Highlights
 
 - **One source of truth.** A preset holds its CMake configuration, its Conan profile and the CI steps that install its compiler. Add a preset, and it works locally and in CI at once.
-- **Seven toolchains out of the box.** GCC and Clang with libstdc++ or libc++ on Linux; MSVC, MinGW-w64 GCC, Clang on the MSVC runtime and Clang on MinGW on Windows.
+- **Eight toolchains out of the box.** GCC and Clang with libstdc++ or libc++ on Linux; MSVC, MinGW-w64 GCC, and Clang on the MSVC runtime, on MinGW or with libc++ on Windows.
+- **Toolchain versions in one place.** The `.vars` key holds a version per compiler, separately for your machine and for CI, and the CI install steps follow it.
 - **One-command builds.** Generate, install dependencies, configure and build — with a remembered default preset and a distinct exit code for every stage.
 - **Machine-local presets.** Add, replace, deep-merge, import or remove presets by name or by regular expression, without touching the shared file.
 - **Warnings that matter.** Curated flag sets for GCC, Clang and MSVC. With `GCST_WERROR=ON` significant warnings become errors, noisy ones stay warnings.
 - **Conan 2 built in.** Dependencies are one line in `conanfile.py`; your own recipes in `recipes/` are exported automatically.
 - **CI with per-commit verdicts.** A full matrix with a Conan cache and a drift check. Results are attached to every commit as git notes, readable right in `git log`.
-- **Self-updating.** Keep the template as a submodule, and one script copies new versions of its files into your project.
+- **Self-updating.** Keep the template as a submodule, and `build.sh --update` pulls its new version into your project — files the template dropped are removed too.
 
 ## Quick start
 
@@ -93,15 +94,16 @@ The preset is remembered, so the next build is just `sh build.sh` or `build.bat`
 
 | Preset | OS | Compiler | Standard library | Needs locally |
 |---|---|---|---|---|
-| `unix-clang-libc++` | Linux | Clang 22 + lld | libc++ | Clang 22, lld, libc++ / libc++abi 22 |
-| `unix-gcc-libstdc++` | Linux | GCC 14 | libstdc++ | GCC 14 |
-| `unix-clang-libstdc++` | Linux | Clang 22 + lld | libstdc++ | Clang 22, lld, GCC 14 |
-| `win64-gcc-libstdc++` | Windows | MinGW-w64 GCC 14.2 | libstdc++ | MinGW-w64 in `PATH` |
-| `win64-clang-libstdc++` | Windows | Clang 20 + lld | libstdc++ (MinGW) | LLVM 20, MinGW-w64 in `PATH` |
-| `win64-msvc-msvcstl` | Windows | MSVC 19.5 | MSVC STL | Visual Studio 2026 |
-| `win64-clang-msvc` | Windows | clang-cl 20 | MSVC STL | LLVM 20, MSVC developer environment |
+| `unix-gcc-libstdc++` | Linux | GCC | libstdc++ | GCC |
+| `unix-clang-libc++` | Linux | Clang + lld | libc++ | Clang, lld, libc++ / libc++abi |
+| `unix-clang-libstdc++` | Linux | Clang + lld | libstdc++ | Clang, lld, GCC |
+| `win64-msvc-msvcstl` | Windows | MSVC | MSVC STL | Visual Studio |
+| `win64-gcc-libstdc++` | Windows | MinGW-w64 GCC | libstdc++ | MinGW-w64 in `PATH` |
+| `win64-clang-msvc` | Windows | clang-cl | MSVC STL | LLVM, MSVC developer environment |
+| `win64-clang-libstdc++` | Windows | Clang + lld | libstdc++ (MinGW) | LLVM and MinGW-w64 in `PATH` |
+| `win64-clang-libc++` | Windows | Clang + lld (llvm-mingw) | libc++ | llvm-mingw in `PATH` |
 
-All presets build the `Release` configuration. How each one installs its toolchain in CI — a ready recipe for setting up a machine — is shown in [its `github_ci` section](docs/presets.md#the-github_ci-section).
+All presets build the `Release` configuration. Which compiler versions they ask for — currently GCC 16.1.0, Clang 19.1.7 and MSVC 19.44 — is set in one place and can be changed per machine, see [Toolchain versions](docs/presets.md#toolchain-versions). How each preset installs its toolchain in CI, a ready recipe for setting up a machine, is shown in [its `github_ci` section](docs/presets.md#the-github_ci-section).
 
 <p align="right"><a href="#table-of-contents">↑ Contents</a></p>
 
@@ -140,7 +142,7 @@ Executables land in `bin/`, static libraries in `build/lib/`.
 
 ### Presets
 
-Base presets live in `.gcst/presets.json`. Presets of your own go into `presets.local.json` in the repository root: it can add new presets and change or drop the base ones.
+Base presets live in `.gcst/presets.json`, together with the toolchain versions they build with. Presets of your own go into `presets.local.json` in the repository root: it can add new presets, change or drop the base ones, and override the versions for your machine.
 
 ```json
 {
@@ -215,18 +217,18 @@ git log --notes=ci
 
 ### Template updates
 
-Keep the template as a submodule and let the updater copy its new versions into your project:
+Keep the template as a submodule. The first install runs from the submodule, every later update from your repository root:
 
 ```sh
 git submodule add https://github.com/Gaymocoder/gcstemplate.git external/gcstemplate
-python3 external/gcstemplate/scripts/gcst_update.py
+cd external/gcstemplate
+sh build.sh --update      # first install
+cd ../..
 
-# later
-git submodule update --remote external/gcstemplate
-python3 external/gcstemplate/scripts/gcst_update.py
+sh build.sh --update      # later: pull the template and update the project
 ```
 
-Updated files are replaced, not merged — keep your presets in `presets.local.json`.
+The updater shows what it's about to replace, add or delete and asks before touching anything. Updated files are replaced, not merged — keep your presets in `presets.local.json`. Coming from v5? Follow [Migrating from v5](docs/updating.md#migrating-from-v5) once.
 
 📖 [Updating the template](docs/updating.md).
 
@@ -243,7 +245,7 @@ Updated files are replaced, not merged — keep your presets in `presets.local.j
 | [Dependencies](docs/dependencies.md) | `conanfile.py`, how `conan install` runs, local recipes |
 | [CMake modules](docs/cmake.md) | Project conventions, target helpers, warning sets, optimization flags |
 | [Continuous integration](docs/ci.md) | Triggers, build job, Conan cache, verdict notes |
-| [Updating the template](docs/updating.md) | Submodule setup, what the updater changes, install-only files |
+| [Updating the template](docs/updating.md) | Submodule setup, `--update` and `--local`, what gets replaced, added and deleted, the file lists, migrating from v5 |
 | [Scripting](docs/scripting.md) | The `gcst` Python package for your own tooling |
 
 ## Demo project

@@ -5,6 +5,7 @@
 `presets.local.json` changes the set of presets without touching `.gcst/presets.json`: it adds presets, replaces or merges into existing ones, and drops the ones you don't need.
 
 - [How it is applied](#how-it-is-applied)
+- [Toolchain versions](#toolchain-versions)
 - [Add a preset](#add-a-preset)
 - [Replace a preset](#replace-a-preset)
 - [Merge into a preset](#merge-into-a-preset)
@@ -18,9 +19,26 @@
 
 The file isn't ignored by the template's `.gitignore`. Commit it to change the project's presets for everyone, CI included, or add it to `.gitignore` to keep it machine-local. Either way it survives [template updates](updating.md), unlike `.gcst/presets.json`.
 
+## Toolchain versions
+
+The compiler versions the base presets build with live in the [`.vars`](presets.md#toolchain-versions) service key. Your machine rarely has exactly those, so override the `local` side of the ones you care about. `".merge": true` keeps the rest of `.vars` intact:
+
+```json
+{
+    ".vars": {
+        ".merge": true,
+        "GCC_VERSION": { "local": "14.2.0", "github_ci": "16.1.0" }
+    }
+}
+```
+
+Now a local build asks Conan for `compiler.version=14`, while CI keeps building with GCC 16.
+
+Without `".merge": true` the whole `.vars` key is replaced, and the versions of the other compilers are gone.
+
 ## Add a preset
 
-A key that doesn't exist in the base file adds a new preset:
+A key that doesn't exist in the base file adds a new preset. `compiler.version` may be left out — it comes from [`.vars`](#toolchain-versions):
 
 ```json
 {
@@ -37,13 +55,12 @@ A key that doesn't exist in the base file adds a new preset:
                 "os": "Linux",
                 "arch": "x86_64",
                 "compiler": "gcc",
-                "compiler.version": "14",
                 "compiler.libcxx": "libstdc++11",
                 "build_type": "Debug"
             }
         },
         "github_ci": [
-            { "run-files": ["g++.sh"] }
+            { "run-files": ["gcc.sh"] }
         ]
     }
 }

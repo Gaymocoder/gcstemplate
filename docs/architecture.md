@@ -29,7 +29,7 @@ A preset is written once, in [`.gcst/presets.json`](presets.md) or [`presets.loc
 
 - **`CMakePresets.json`** — one configure preset per preset, pointing CMake at the Conan toolchain;
 - **`conan/profiles/<preset>`** — the Conan host profile the dependencies are installed with;
-- **`.github/workflows/ci.yml`** — the build matrix and the steps installing each toolchain.
+- **`.github/workflows/ci.yml`** — the build matrix and the steps installing each toolchain, with `{gcst::...}` tags replaced by the [toolchain versions](presets.md#toolchain-versions).
 
 The build driver then installs dependencies with the matching profile and configures CMake with the matching preset — see [Building](build.md#stages-and-exit-codes). GitHub Actions runs the same driver for every preset — see [Continuous integration](ci.md).
 
@@ -55,7 +55,10 @@ The build driver then installs dependencies with the matching profile and config
 │   ├── gcst/                    shared Python package
 │   ├── scripts/
 │   │   ├── build.py             build driver
-│   │   └── configure.py         preset generator
+│   │   ├── configure.py         preset generator
+│   │   └── update.py            template updater
+│   ├── .gcstu-install-update    files kept up to date by the updater
+│   ├── .gcstu-install-only      files installed only once
 │   └── presets.json             base presets
 ├── .github/workflows/
 │   ├── ci.yml                   CI workflow (partly generated)
@@ -64,9 +67,6 @@ The build driver then installs dependencies with the matching profile and config
 │   ├── utils.cmake              target helpers
 │   └── warnings.cmake           warning and optimization sets
 ├── docs/                        this documentation
-├── scripts/
-│   ├── gcst_update.py           template updater
-│   └── .gcstu-install-only      files installed only once
 ├── include/gcst/                public headers of the demo
 ├── hello/                       demo executable
 ├── utils/                       demo library
@@ -83,6 +83,6 @@ The build driver then installs dependencies with the matching profile and config
 | `.gcst/scripts/configure.py`, `.gcst/presets.json` | [Presets](presets.md) |
 | `.github/workflows/` | [Continuous integration](ci.md) |
 | `cmake/gcst/`, `CMakeLists.txt` | [CMake modules](cmake.md) |
-| `scripts/` | [Updating the template](updating.md) |
+| `.gcst/scripts/update.py`, `.gcst/.gcstu-install-*` | [Updating the template](updating.md) |
 | `conanfile.py` | [Dependencies](dependencies.md) |
 | `include/`, `hello/`, `utils/` | [Demo project](../README.md#demo-project) |

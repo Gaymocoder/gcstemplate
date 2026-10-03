@@ -32,8 +32,10 @@ Package options go into `default_options`, as with `boost/*:header_only` above.
 | Output | `build/`, where the preset's CMake toolchain file points |
 | Missing binaries | built from source (`--build=missing`) |
 | System packages | may be installed: runs with `tools.system.package_manager:mode=install` and `sudo=True`, so recipes with system requirements can call the OS package manager through `sudo` |
+| Visual Studio | its installation path is looked up with `vswhere` and passed as `tools.microsoft.msbuild:installation_path`, so dependencies that build with MSBuild find the toolchain |
+| Dependency graph | written to `build/graph.json` (`--format=json --out-file`), which CI uses to [cache exactly the packages of this build](ci.md#conan-cache) |
 
-A failed install stops the build with [exit code `5`](build.md#stages-and-exit-codes). In CI, installed packages are [cached per preset](ci.md#conan-cache).
+A failed install stops the build with [exit code `6`](build.md#stages-and-exit-codes). In CI, installed packages are [cached per preset](ci.md#conan-cache).
 
 ## Local recipes
 
@@ -45,7 +47,7 @@ recipes/
     └── conanfile.py
 ```
 
-Before `conan install`, every directory whose name matches a requirement of `conanfile.py` is exported with `conan export`, using the version from that requirement. Directories without a matching requirement are skipped. A failed export stops the build with [exit code `4`](build.md#stages-and-exit-codes).
+Before `conan install`, every directory whose name matches a requirement of `conanfile.py` is exported with `conan export`, using the version from that requirement. Directories without a matching requirement are skipped. A failed export stops the build with [exit code `5`](build.md#stages-and-exit-codes).
 
 > **[IMPORTANT]**  
 > Versions are read with `conan inspect`, which sees only the `requires` attribute. Requirements added in a `requirements()` method are invisible to it, and their local recipes are skipped without a warning.
