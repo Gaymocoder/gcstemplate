@@ -9,12 +9,14 @@ from pathlib import Path
 
 # TODO: auto-detect preset
 
-def getArgs(conf_only = False):
+def getArgs(subscripts = 'all'):
     conf_args = []
+    updater_args = []
     argvParser = argparse.ArgumentParser(prog = 'gcst-builder')
     argvParser.add_argument('-p', '--preset', default = None)
     argvParser.add_argument('-c', '--clear', action = 'store_true')
     argvParser.add_argument('-v', '--verbose', action = 'store_true')
+    argvParser.add_argument('-u', '--update', action = 'store_true')
 
     conf_args.append(argvParser.add_argument('-pl', '--presets-local', default = None))
     conf_args.append(argvParser.add_argument('-il', '--ignore-local', action = 'store_true'))
@@ -23,7 +25,12 @@ def getArgs(conf_only = False):
     conf_args.append(argvParser.add_argument('--no-conan', action = 'store_true'))
     conf_args.append(argvParser.add_argument('--no-ghci', action = 'store_true'))
 
-    if (conf_only):
+    updater_args.append(argvParser.add_argument('--local', action = 'store_true'))
+
+    if ('update' in subscripts):
+        return updater_args
+
+    if ('configure' in subscripts):
         return conf_args
 
     args = argvParser.parse_args()
@@ -52,24 +59,26 @@ def clear_build_dir():
 
 def gcst_configure():
     args = getArgs()
-    conf_args = getArgs(conf_only = True)
+    conf_args = getArgs(subscripts = 'configure')
     command = [sys.executable, gcst.paths.configure_py]
-
-    for arg in conf_args:
-        value = getattr(args, arg.dest)
-        if value is None or value is False:
-            continue
-
-        command.append(arg.option_strings[0])
-        if arg.nargs == 0:
-            continue
-        
-        if isinstance(value, (list, tuple)):
-            command.extend(str(v) for v in value)
-        else:
-            command.append(str(value))
+    command.extend(gcst.service.extract_args(args, conf_args))
 
     return subprocess.run(command, check = False)
+
+
+def gcst_update():
+    if not gcst.paths.update_py:
+        return 1
+    
+    args = getArgs()
+    updater_args = getArgs(subscripts = 'update')
+    command = [sys.executable, gcst.paths.update_py]
+    command.extend(gcst.service.extract_args(args, updater_args))
+
+    env = os.environ.copy()
+    env["PYTHONPATH"] = str(gcst.paths.submodule/".gcst") + os.pathsep + env["PYTHONPATH"]
+    return subprocess.run(command, check = False, env=env)
+
 
 def conan_find_version(lib_name, dict_responce = None):
     if not dict_responce:
@@ -142,28 +151,46 @@ def cmake_build():
 
 def main():
     args = getArgs()
+    if args.update:
+        if not args.local and gcst.submodule_update():
+            return 1
+
+        result = gcst_update()
+        if isinstance(result, int):
+            print(f"update failed with code {result}: No submodule detected")
+            return 1
+        
+        if result.returncode != 0:
+            print(f"Update failed with code {result.returncode}")
+            print("Executed command:\n", *result.args)
+            return 1
+
+        return 0
+            
     clear = args.clear
     preset = args.preset
     if not preset:
         print("Build-preset was not specified, but no default preset is set. Aborting")
-        return 1
+        return 2
 
     if clear:
         clear_build_dir()
     os.makedirs(gcst.paths.build_dir, exist_ok = True)
+
+    
     
     result = gcst_configure()
     if result.returncode != 0:
         print(f"Configure failed with code {result.returncode}")
         print("Executed command:\n", *result.args)
-        return 2
+        return 3
 
     if not args.no_conan:
         conan_dir = gcst.paths.repo/"conan"/"profiles"
         conan_profile = conan_dir/preset
         if not conan_profile.exists():
             print(f"No specified build-preset ({preset}) was found. Aborting")
-            return 3
+            return 4
 
         setDefaultPreset(preset)
 
@@ -171,24 +198,24 @@ def main():
         if result not in [None, 0] and result.returncode != 0:
             print(f"Conan export recepies failed with code {result.returncode}")
             print("Executed command:\n", *result.args)
-            return 4
+            return 5
 
         result = conan_install(conan_profile)
         if result.returncode != 0:
             print(f"Conan install failed with code {result.returncode}")
             print("Executed command:\n", *result.args)
-            return 5
+            return 6
 
     if not args.no_cmake:
         result = cmake(preset)
         if result.returncode != 0:
             print("Executed command:\n", *result.args)
-            return 6
+            return 7
         
         result = cmake_build()
         if result.returncode != 0:
             print("Executed command:\n", *result.args)
-            return 7
+            return 8
 
     return 0
 

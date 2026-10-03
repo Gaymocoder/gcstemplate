@@ -26,7 +26,7 @@ class _Paths:
     @cached_property
     def submodule(self):
         try:
-            submodules = subprocess.check_output(['git', '-C', self.repo, 'config', '--file', '.gitmodules', '--get-regexp', 'url'], text = True).strip().split("\n")
+            submodules = subprocess.check_output(['git', '-C', self.srepo, 'config', '--file', '.gitmodules', '--get-regexp', 'url'], text = True).strip().split("\n")
         except subprocess.CalledProcessError:
             return ''
         
@@ -34,7 +34,7 @@ class _Paths:
             data = sm.split()
             if data[1].find(f'Gaymocoder/{name}') != -1:
                 submodule = data[0][len('submodule.'):-len('.url')]
-                return self.repo / submodule
+                return self.srepo / submodule
         return ''
 
     @cached_property
@@ -60,6 +60,12 @@ class _Paths:
     @cached_property
     def configure_py(self):
         return self.gcst/"scripts"/"configure.py"
+
+    @cached_property
+    def update_py(self):
+        if self.submodule:
+            return self.submodule/".gcst"/"scripts"/"update.py"
+        return ''
     
     @cached_property
     def default_preset(self):
