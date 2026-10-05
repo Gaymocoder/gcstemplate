@@ -339,6 +339,9 @@
                 "compiler.runtime": "dynamic",
                 "compiler.runtime_type": "Release",
                 "build_type": "Release"
+            },
+            "conf": {
+                "cli11/*:tools.cmake.cmaketoolchain:generator": "NMake Makefiles"
             }
         },
         "github_ci": [
