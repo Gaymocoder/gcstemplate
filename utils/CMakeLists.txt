@@ -10,7 +10,7 @@ add_library(gcst_utils_settings OBJECT ${gcst_settings_lib})
 list(APPEND gcst_utils_objs gcst_utils_exstd)
 list(APPEND gcst_utils_objs gcst_utils_settings)
 
-target_link_libraries(gcst_utils_settings CLI11::CLI11)
+target_link_libraries(gcst_utils_settings PRIVATE CLI11::CLI11)
 
 gcst_binary_prepare(gcst_utils_exstd)
 gcst_binary_prepare(gcst_utils_settings)
