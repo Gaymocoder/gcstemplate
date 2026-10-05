@@ -1,7 +1,15 @@
+#ifndef __GCST_UTILS_SETTINGS_H__
+#define __GCST_UTILS_SETTINGS_H__
+
+#include "gcst/utils/exstd.h"
+
+#include <map>
+#include <tuple>
 #include <string>
 #include <filesystem>
 
 namespace fs = std::filesystem;
+namespace CLI {class App;}
 
 namespace gcst::utils
 {
@@ -9,18 +17,30 @@ namespace gcst::utils
     {
         private:
             settings();
-            inline static fs::path logdir_path;
-            inline static fs::path config_path = "settings.conf";
 
-            inline static std::string file_loglevel;
-            inline static std::string console_loglevel;
+        protected:
+            inline static int argc;
+            inline static char** argv;
+
+            inline static fs::path mydir = exstd::exe_path().parent_path();
+            inline static fs::path config_path = mydir/"settings.conf";
+            inline static std::map <std::string, std::string> dict;
+
+            static gcst::etype extract(CLI::App&);
 
         public:
-            static void init();
+            static gcst::etype init(int, char**);
+
+            static void write();
+            
             static void set_to_defaults();
             static void reset_to_defaults();
-            static void read_from_cli();
-            static void read_from_config();
 
+            static void set(std::string, std::string);
+            static std::string_view get(std::string);
+
+            static const std::map <std::string, std::string>& list();
     };
 }
+
+#endif
