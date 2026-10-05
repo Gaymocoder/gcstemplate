@@ -1,10 +1,10 @@
 #include "gcst/utils/exstd.h"
 
+#include <string>
+
 #ifdef _WIN32
     #include <windows.h>
 #endif
-
-#include <string>
 
 namespace gcst::utils::exstd
 {
@@ -19,6 +19,7 @@ fs::path exe_path()
         DWORD total_wchars = GetModuleFileNameW(nullptr, wstrpath.data(), MAX_PATH);
         if (total_wchars == 0)
             return {};
+
         if (total_wchars < wstrpath.size())
         {
             wstrpath.resize(total_wchars);
