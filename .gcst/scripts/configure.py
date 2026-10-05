@@ -34,6 +34,9 @@ yaml = YAML()
 def deep_merge(a, b):
     result = a.copy()
     for key, value in b.items():
+        if key == ".merge":
+            continue
+
         if key in result and isinstance(result[key], dict) and isinstance(value, dict):
             result[key] = deep_merge(result[key], value)
         else:
@@ -250,10 +253,10 @@ def presets_read(presets_file, presets_local_file):
 
         if key in presets:
             if ".merge" in local_presets[key] and local_presets[key][".merge"] == True:
-                gcstout(f"-- Overrided preset (merged) \"{key}\"")
+                gcstout(f"-- Overrided preset \"{key}\" (merged)")
                 presets[key] = deep_merge(presets[key], local_presets[key])
                 continue
-            gcstout(f"-- Overrided preset (rebased) \"{key}\"")
+            gcstout(f"-- Overrided preset (rebased) \"{key}\" (rebased)")
         else:
             gcstout(f"-- Added preset \"{key}\"")
         presets[key] = local_presets[key]
@@ -297,6 +300,7 @@ def presets_extract(presets, cmake_out, conan_out, out_ghci_steps, out_ghci_matr
             continue
         gcstout(f"-- {key}")
         preset = presets[key]
+
         cmake_preset_process(key, preset, cmake_out)
         conan_preset_process(key, preset, conan_out)
         githubci_preset_process(key, preset, out_ghci_steps, out_ghci_matrix)
