@@ -4,6 +4,7 @@
 namespace gcst::showcase
 {
     void std_print();
+    void test_cli();
 }
 
 #endif

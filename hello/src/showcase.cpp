@@ -1,5 +1,5 @@
 #include "gcst/showcase.h"
-#include "gcst/utils.h"
+#include "gcst/gcst.h"
 
 #include <boost/algorithm/string.hpp>
 
@@ -94,6 +94,12 @@ void std_print()
     std::print("   contains 'three':  {}\n\n", boost::contains(csv, "three"));
 
     std::print("════════════════════════════════════════\n");
+}
+
+void test_cli()
+{
+    for(auto& [key, value] : gcst::settings::list())
+        std::println("{}: \"{}\"", key, value);
 }
 
 }
