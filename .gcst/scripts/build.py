@@ -17,6 +17,7 @@ def getArgs(subscripts = 'all'):
     argvParser.add_argument('-c', '--clear', action = 'store_true')
     argvParser.add_argument('-v', '--verbose', action = 'store_true')
     argvParser.add_argument('-u', '--update', action = 'store_true')
+    argvParser.add_argument('-d', '--debug', action = 'store_true')
 
     conf_args.append(argvParser.add_argument('-pl', '--presets-local', default = None))
     conf_args.append(argvParser.add_argument('-il', '--ignore-local', action = 'store_true'))
@@ -123,7 +124,8 @@ def conan_install(profile):
         f"--out-file={gcst.paths.build_dir / 'graph.json'}",
         "--build=missing",
         "-c", "tools.system.package_manager:mode=install",
-        "-c", "tools.system.package_manager:sudo=True"
+        "-c", "tools.system.package_manager:sudo=True",
+        "-s", f"build_type={'Debug' if getArgs().debug else 'Release'}"
     ]
 
     msvc_path = gcst.versions.msvc_path()
@@ -139,11 +141,13 @@ def cmake(preset):
     else:
         command.extend(["--preset", preset])
     command.append(f"-DGCST_WARNINGS_AS_ERRORS={os.environ['GCST_WERROR']}")
+    command.append(f"-DCMAKE_BUILD_TYPE={'Debug' if getArgs().debug else 'Release'}")
     return subprocess.run(command, cwd = gcst.paths.repo, check = False)
 
     
 def cmake_build():
-    command = ["cmake", "--build", gcst.paths.build_dir, '--config', 'Release']
+    command = ["cmake", "--build", gcst.paths.build_dir, '--config']
+    command.append('Debug' if getArgs().debug else 'Release')
     if getArgs().verbose:
         command.append('--verbose')
     return subprocess.run(command, check = False)
