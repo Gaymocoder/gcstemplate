@@ -10,6 +10,7 @@ add_executable(gcst_hello_exe ${MAIN_EXE})
 target_link_libraries(gcst_hello_showcase PRIVATE gcst::utils)
 target_link_libraries(gcst_hello_showcase PRIVATE Boost::headers)
 
+target_link_libraries(gcst_hello_exe PRIVATE gcst::utils)
 target_link_libraries(gcst_hello_exe PRIVATE gcst_hello_showcase)
 
 gcst_binary_prepare(gcst_hello_showcase)

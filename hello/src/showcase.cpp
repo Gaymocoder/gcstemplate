@@ -98,7 +98,7 @@ void std_print()
 
 void test_cli()
 {
-    for(auto& [key, value] : gcst::settings::list())
+    for(auto& [key, value] : gcst::params->list())
         std::println("{}: \"{}\"", key, value);
 }
 
