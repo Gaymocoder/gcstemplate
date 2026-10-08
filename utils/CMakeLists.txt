@@ -1,6 +1,8 @@
 cmake_minimum_required(VERSION 3.31)
 project(gcstemplate_utils)
 
+find_package(CLI11 REQUIRED)
+
 set(gcst_exstd_lib src/exstd.cpp)
 set(gcst_isettings_lib src/isettings.cpp)
 

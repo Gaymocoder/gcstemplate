@@ -2,7 +2,6 @@ cmake_minimum_required(VERSION 3.31)
 project(gcstemplate VERSION 6.0.0)
 
 find_package(Boost REQUIRED)
-find_package(CLI11 REQUIRED)
 
 block()
     include(${CMAKE_CURRENT_LIST_DIR}/cmake/gcst/utils.cmake)
