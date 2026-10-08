@@ -16,4 +16,5 @@ block()
     
     add_subdirectory(utils)
     add_subdirectory(hello)
+    add_subdirectory(samples)
 endblock()
