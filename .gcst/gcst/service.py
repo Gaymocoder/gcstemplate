@@ -1,4 +1,4 @@
-from .constants import paths
+from .constants import paths, name
 
 import subprocess
 
@@ -8,7 +8,7 @@ class _Service:
             print(f"Failed to update gcstemplate submodule: submodule's not found")
             return 1
         
-        result = subprocess.run(["git", "-C", paths.srepo, "submodule", "update", "--remote", "--merge", paths.submodule], check = False)
+        result = subprocess.run(["git", "-C", paths.srepo, "-c", f"submodule.{name}.branch=stable", "submodule", "update", "--remote", "--merge", paths.submodule], check = False)
         if result.returncode:
             print(f"Failed to update gcstemplate submodule: git returned code {result.returncode}")
             return result.returncode
