@@ -7,5 +7,5 @@ class gcstDeps(ConanFile):
     }
 
     requires = (
-        "cli11/[>=2.7.2]"
+        "cli11/[>=2.7.2]",
     )
