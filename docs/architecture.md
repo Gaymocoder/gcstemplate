@@ -59,6 +59,7 @@ The build driver then installs dependencies with the matching profile and config
 │   │   └── update.py            template updater
 │   ├── .gcstu-install-update    files kept up to date by the updater
 │   ├── .gcstu-install-only      files installed only once
+│   ├── gcst_conan_deps.py       the template's Conan dependencies
 │   └── presets.json             base presets
 ├── .github/workflows/
 │   ├── ci.yml                   CI workflow (partly generated)
@@ -85,5 +86,5 @@ The build driver then installs dependencies with the matching profile and config
 | `.github/workflows/` | [Continuous integration](ci.md) |
 | `cmake/gcst/`, `CMakeLists.txt` | [CMake modules](cmake.md) |
 | `.gcst/scripts/update.py`, `.gcst/.gcstu-install-*` | [Updating the template](updating.md) |
-| `conanfile.py` | [Dependencies](dependencies.md) |
+| `conanfile.py`, `.gcst/gcst_conan_deps.py` | [Dependencies](dependencies.md) |
 | `include/`, `hello/`, `utils/`, `samples/` | [Demo project](../README.md#demo-project), [Settings](settings.md) |

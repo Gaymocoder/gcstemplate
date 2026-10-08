@@ -50,7 +50,7 @@ gcstemplate is a starting point for C++ projects that have to build everywhere f
 - **Conan 2 built in.** Dependencies are one line in `conanfile.py`; your own recipes in `recipes/` are exported automatically.
 - **Settings out of the box.** `gcst::settings` reads defaults, a config file and the command line through CLI11 in one call, and an application adds settings of its own by inheriting from it.
 - **CI with per-commit verdicts.** A full matrix with a Conan cache and a drift check. Results are attached to every commit as git notes, readable right in `git log`.
-- **Self-updating.** Keep the template as a submodule, and `build.sh --update` pulls its new version into your project — files the template dropped are removed too.
+- **Self-updating.** Keep the template as a submodule, and `build.sh --update` pulls its latest release into your project — files the template dropped are removed too.
 
 ## Quick start
 
@@ -168,12 +168,12 @@ This drops every Windows preset and makes the GCC preset emit `compile_commands.
 
 ### Dependencies
 
-Add a requirement to `conanfile.py` and find it from CMake as usual:
+Add a requirement to `conanfile.py`, after the template's own ones, and find it from CMake as usual:
 
 ```python
 requires = (
+    *gcstDeps.requires,   # the template's dependencies, kept up to date by --update
     "boost/1.87.0",
-    "cli11/[>=2.7.2]",
     "fmt/10.2.1",
 )
 ```
@@ -245,12 +245,12 @@ git log --notes=ci
 Keep the template as a submodule. The first install runs from the submodule, every later update from your repository root:
 
 ```sh
-git submodule add https://github.com/Gaymocoder/gcstemplate.git external/gcstemplate
+git submodule add -b stable https://github.com/Gaymocoder/gcstemplate.git external/gcstemplate
 cd external/gcstemplate
 sh build.sh --update      # first install
 cd ../..
 
-sh build.sh --update      # later: pull the template and update the project
+sh build.sh --update      # later: pull the latest release and update the project
 ```
 
 The updater shows what it's about to replace, add or delete and asks before touching anything. Updated files are replaced, not merged — keep your presets in `presets.local.json`. Coming from v5? Follow [Migrating from v5](docs/updating.md#migrating-from-v5) once.
@@ -267,7 +267,7 @@ The updater shows what it's about to replace, add or delete and asks before touc
 | [Building](docs/build.md) | Build scripts, every option, default preset, stages and exit codes, output layout, running the generator alone |
 | [Presets](docs/presets.md) | Preset format: `cmake`, `conan` and `github_ci` sections, CI service keys, adding a preset |
 | [Local presets](docs/local-presets.md) | Adding, replacing, merging, importing and removing presets; keeping CI in sync |
-| [Dependencies](docs/dependencies.md) | `conanfile.py`, how `conan install` runs, local recipes |
+| [Dependencies](docs/dependencies.md) | `conanfile.py` and the template's base dependencies, how `conan install` runs, local recipes |
 | [CMake modules](docs/cmake.md) | Project conventions, target helpers, warning sets, optimization flags |
 | [Continuous integration](docs/ci.md) | Triggers, build job, Conan cache, verdict notes |
 | [Updating the template](docs/updating.md) | Submodule setup, `--update` and `--local`, what gets replaced, added and deleted, the file lists, migrating from v5 |

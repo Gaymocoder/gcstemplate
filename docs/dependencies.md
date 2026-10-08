@@ -2,7 +2,7 @@
 
 <sub>[README](../README.md) · [Architecture](architecture.md) · [Building](build.md) · [Presets](presets.md) · [Local presets](local-presets.md) · [Dependencies](dependencies.md) · [CMake modules](cmake.md) · [CI](ci.md) · [Updating](updating.md) · [Scripting](scripting.md) · [Settings](settings.md)</sub>
 
-Dependencies are managed by Conan 2: declared in `conanfile.py`, installed into `build/` before CMake runs, and found with a plain `find_package()`.
+Dependencies are managed by Conan 2: declared in `conanfile.py` on top of the template's own ones, installed into `build/` before CMake runs, and found with a plain `find_package()`.
 
 - [`conanfile.py`](#conanfilepy)
 - [How `conan install` runs](#how-conan-install-runs)
@@ -10,26 +10,48 @@ Dependencies are managed by Conan 2: declared in `conanfile.py`, installed into 
 
 ## `conanfile.py`
 
-Uses the `CMakeToolchain` and `CMakeDeps` generators. Declare dependencies in the `requires` attribute — [local recipes](#local-recipes) rely on it:
+Dependencies come from two files:
+
+- **`.gcst/gcst_conan_deps.py`** — the `gcstDeps` base class with what the template's own code needs. It belongs to the template and is [kept up to date](updating.md#file-lists) by `--update`, so edits to it are overwritten.
+- **`conanfile.py`** — your project's recipe. It inherits `gcstDeps` and adds dependencies of its own to the base ones. It uses the `CMakeToolchain` and `CMakeDeps` generators:
 
 ```python
-class gcstConan(ConanFile):
+import os, sys
+sys.path.insert(0, os.path.join(os.path.dirname(__file__), ".gcst"))
+
+from conan import ConanFile
+from conan.tools.cmake import CMakeToolchain, CMakeDeps
+
+from gcst_conan_deps import gcstDeps
+
+class gcstConan(gcstDeps):
     settings = "os", "arch", "compiler", "build_type"
+
     default_options = {
-        "boost/*:header_only": True,
-        "cli11/*:header_only": False
+        **gcstDeps.default_options,
+        "boost/*:header_only": True
     }
 
     requires = (
-        "boost/1.87.0",
-        "cli11/[>=2.7.2]"
+        *gcstDeps.requires,
+        "boost/1.87.0"
     )
+
+    def generate(self):
+        CMakeToolchain(self).generate()
+        CMakeDeps(self).generate()
 ```
 
-Package options go into `default_options`:
+- **Declare dependencies in the `requires` attribute** and package options in `default_options`. [Local recipes](#local-recipes) rely on the attribute, a `requirements()` method is invisible to them.
+- **Keep `*gcstDeps.requires` and `**gcstDeps.default_options`.** An attribute of your class replaces the base one entirely, and the template's dependencies would be lost without them.
+- **Keep the `sys.path` line.** It lets Conan find the base class however Conan is started — by the build scripts or by hand.
 
-- **Boost** is used header-only.
-- **CLI11**, which the [settings module](settings.md) is built on, is the opposite: with `header_only=False` Conan builds it as a static library and defines `CLI11_COMPILE` for its consumers, so its implementation is compiled once instead of in every file that includes it.
+| Package | Declared in | Used by |
+|---|---|---|
+| `cli11/[>=2.7.2]`, `header_only=False` | `gcstDeps` | the [settings module](settings.md) |
+| `boost/1.87.0`, `header_only=True` | `conanfile.py` | the demo in `hello/` |
+
+CLI11 is built as a static library: with `header_only=False` Conan defines `CLI11_COMPILE` for its consumers, so its implementation is compiled once instead of in every file that includes it.
 
 The `win64-msvc-msvcstl` preset builds CLI11 with the `NMake Makefiles` generator, set for that package alone in the preset's [`conan` section](presets.md#the-conan-section):
 

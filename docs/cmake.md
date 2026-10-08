@@ -15,7 +15,7 @@
 
 The root `CMakeLists.txt` sets up everything the helpers rely on:
 
-- `find_package()` for every [dependency](dependencies.md), so their targets are visible to all subprojects;
+- `find_package()` for the project's own [dependencies](dependencies.md); `utils/` finds CLI11 itself, since the root file isn't [updated](updating.md#file-lists) after installation;
 - C++23, required;
 - `GCST_INCLUDE_DIRS` pointing at `include/`;
 - static libraries in `build/lib/`, executables in `bin/`;
@@ -75,6 +75,8 @@ target_link_libraries(my_app PRIVATE gcst::utils)
 > A module's link dependencies are passed on to consumers for linking only. Its include directories and compile definitions are not: if a public header needs a dependency, link it to the exported library with `PUBLIC`. `utils/` does this with CLI11:
 >
 > ```cmake
+> find_package(CLI11 REQUIRED)
+>
 > add_library(gcst_utils_isettings OBJECT src/isettings.cpp)
 > target_link_libraries(gcst_utils_isettings PRIVATE CLI11::CLI11)   # to compile the module
 >

@@ -2,7 +2,7 @@
 
 <sub>[README](../README.md) · [Architecture](architecture.md) · [Building](build.md) · [Presets](presets.md) · [Local presets](local-presets.md) · [Dependencies](dependencies.md) · [CMake modules](cmake.md) · [CI](ci.md) · [Updating](updating.md) · [Scripting](scripting.md) · [Settings](settings.md)</sub>
 
-The template can stay in your project as a git submodule. `build.sh --update` pulls its latest version and brings your copies of the template's files up to date: changed files are replaced, new ones added, dropped ones deleted.
+The template can stay in your project as a git submodule. `build.sh --update` pulls its latest release and brings your copies of the template's files up to date: changed files are replaced, new ones added, dropped ones deleted.
 
 - [Setup](#setup)
 - [Updating](#updating)
@@ -13,12 +13,12 @@ The template can stay in your project as a git submodule. `build.sh --update` pu
 ## Setup
 
 ```sh
-git submodule add https://github.com/Gaymocoder/gcstemplate.git external/gcstemplate
+git submodule add -b stable https://github.com/Gaymocoder/gcstemplate.git external/gcstemplate
 cd external/gcstemplate
 sh build.sh --update
 ```
 
-On Windows, run `build.bat --update` there instead.
+On Windows, run `build.bat --update` there instead. `-b stable` makes the first install a release too: the `stable` branch points at the latest release, `master` at work in progress.
 
 The first run starts from the submodule because your project has no build scripts yet. It installs the template's files into your repository root. The submodule is found by its URL in `.gitmodules`: any URL containing `Gaymocoder/gcstemplate` works, HTTPS or SSH, and the submodule can live at any path.
 
@@ -32,10 +32,10 @@ sh build.sh --update
 
 | Option | Effect |
 |---|---|
-| `-u`, `--update` | Pull the template submodule, then update the project |
+| `-u`, `--update` | Pull the latest template release, then update the project |
 | `--local` | Don't pull: update from the submodule as it is checked out — offline, or to stay on a pinned version |
 
-The pull is `git submodule update --remote --merge` on the template submodule. If it fails, nothing is updated. Commit the new submodule commit together with the updated files.
+The pull is `git submodule update --remote --merge` on the template submodule, from its `stable` branch. If it fails, nothing is updated. Commit the new submodule commit together with the updated files.
 
 `--update` replaces the build: nothing is configured or compiled. The exit code is `0` on success and `1` on any failure.
 
@@ -63,7 +63,7 @@ Do you want to continue? [Y/n]
 | left alone | it's install-only and already exists, or it's on neither list |
 
 > **[!WARNING]**  
-> Updated files are replaced, not merged. Keep your presets in [`presets.local.json`](local-presets.md), not in `.gcst/presets.json`, your warning tweaks outside `cmake/gcst/`, and the `gcst_utils` files as shipped — extend the settings [by inheritance](settings.md#adding-settings-of-your-own) instead of editing them.
+> Updated files are replaced, not merged. Keep your presets in [`presets.local.json`](local-presets.md), not in `.gcst/presets.json`, your warning tweaks outside `cmake/gcst/`, your dependencies in `conanfile.py`, not in `.gcst/gcst_conan_deps.py`, and the `gcst_utils` files as shipped — extend the settings [by inheritance](settings.md#adding-settings-of-your-own) instead of editing them.
 
 ## File lists
 
@@ -74,6 +74,7 @@ Both lists live in the template's `.gcst/` and are read from the submodule. One 
 | `.github/workflows/ci.yml` | `conanfile.py` |
 | CI toolchain installers: `.github/workflows/scripts/gcc.sh`, `gcc.ps1`, `clang.sh`, `clang-msvc.ps1`, `clang-mingw.ps1` | `CMakeLists.txt` |
 | `.gcst/presets.json`, `.gcst/scripts/build.py`, `.gcst/scripts/configure.py` | |
+| the template's [Conan dependencies](dependencies.md#conanfilepy): `.gcst/gcst_conan_deps.py` | |
 | [`gcst` package](scripting.md): `.gcst/gcst/__init__.py`, `constants.py`, `detect_api.py`, `service.py` | |
 | both list files | |
 | `cmake/gcst/utils.cmake`, `cmake/gcst/warnings.cmake` | |
@@ -88,32 +89,9 @@ Your copies of the lists aren't configuration. The install-only list is read fro
 > **[!WARNING]**  
 > Don't add your own paths to `.gcst/.gcstu-install-update`. A path that's in your copy but not in the template's counts as dropped by the template, and the file is deleted on the next update.
 
-Install-only files are never touched again, so when the template starts needing something in them, an update can't add it. The `gcst_utils` library needs CLI11 and its own subdirectory. If your `conanfile.py` and `CMakeLists.txt` were installed before it, add these lines yourself:
+Install-only files are never touched again, so changes the template makes to them don't reach your project. The template's own dependencies therefore live in `.gcst/gcst_conan_deps.py`, which is updated, and your `conanfile.py` only inherits them. A `conanfile.py` installed before the base class appeared needs this one edit by hand — make it inherit `gcstDeps` as [shown in Dependencies](dependencies.md#conanfilepy). From then on, new dependencies of the template's code arrive with `--update`.
 
-```python
-# conanfile.py
-default_options = {
-    # ...
-    "cli11/*:header_only": False
-}
-
-requires = (
-    # ...
-    "cli11/[>=2.7.2]"
-)
-```
-
-```cmake
-# CMakeLists.txt
-find_package(CLI11 REQUIRED)
-
-block()
-    # ...
-    add_subdirectory(utils)
-endblock()
-```
-
-Why CLI11 is built this way is explained in [Dependencies](dependencies.md#conanfilepy).
+The root `CMakeLists.txt` needs nothing new: `utils/` finds CLI11 on its own, and `add_subdirectory(utils)` has been in it since v5.0.0.
 
 ## Migrating from v5
 
