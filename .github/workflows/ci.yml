@@ -11,6 +11,7 @@ jobs:
     env:
       GH_TOKEN: ${{ github.token }}
       GCST_WERROR: ON
+      GCST_SAMPLES_BUILD: ON
       PYTHONPATH: ${{ github.workspace }}/.gcst
     strategy:
       fail-fast: false

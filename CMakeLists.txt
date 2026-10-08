@@ -16,5 +16,8 @@ block()
     
     add_subdirectory(utils)
     add_subdirectory(hello)
-    add_subdirectory(samples)
+
+    if (GCST_SAMPLES_BUILD)
+        add_subdirectory(samples)
+    endif()
 endblock()
