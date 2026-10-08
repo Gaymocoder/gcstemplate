@@ -19,6 +19,21 @@ void isettings::set(std::string key, std::string value)
     this->dict[key] = value;
 }
 
+void isettings::set(std::string key, std::string value, isettings::type settype)
+{
+    this->set(key, value);
+    switch (settype)
+    {
+        case isettings::type::flag:
+            this->cli->add_flag(std::format("--{}", key), this->dict[key]);
+            break;
+
+        case isettings::type::option:
+            this->cli->add_option(std::format("--{}", key), this->dict[key]);
+            break;
+    }
+}
+
 void isettings::write()
 {
     std::ofstream fconf = std::ofstream(this->config_path);

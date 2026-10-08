@@ -29,11 +29,17 @@ namespace gcst::utils
             virtual etype extract();
 
         public:
+            enum class type {
+                flag,
+                option,
+            };
+
             virtual void write();
             virtual void set_to_defaults();
             virtual void reset_to_defaults();
 
             void set(std::string, std::string);
+            void set(std::string, std::string, type settype);
             std::string_view get(std::string);
 
             const std::map <std::string, std::string>& list();
