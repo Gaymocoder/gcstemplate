@@ -1,6 +1,6 @@
 # Architecture
 
-<sub>[README](../README.md) · [Architecture](architecture.md) · [Building](build.md) · [Presets](presets.md) · [Local presets](local-presets.md) · [Dependencies](dependencies.md) · [CMake modules](cmake.md) · [CI](ci.md) · [Updating](updating.md) · [Scripting](scripting.md)</sub>
+<sub>[README](../README.md) · [Architecture](architecture.md) · [Building](build.md) · [Presets](presets.md) · [Local presets](local-presets.md) · [Dependencies](dependencies.md) · [CMake modules](cmake.md) · [CI](ci.md) · [Updating](updating.md) · [Scripting](scripting.md) · [Settings](settings.md)</sub>
 
 How the parts of the template fit together, which files are generated and which are yours, and where everything lives.
 
@@ -67,9 +67,10 @@ The build driver then installs dependencies with the matching profile and config
 │   ├── utils.cmake              target helpers
 │   └── warnings.cmake           warning and optimization sets
 ├── docs/                        this documentation
-├── include/gcst/                public headers of the demo
+├── include/gcst/                public headers: gcst.h, utils/, showcase.h
 ├── hello/                       demo executable
-├── utils/                       demo library
+├── samples/                     settings samples
+├── utils/                       gcst_utils library: exstd, settings
 ├── build.sh                     Linux entry point
 ├── build.bat                    Windows entry point
 ├── conanfile.py                 dependencies
@@ -85,4 +86,4 @@ The build driver then installs dependencies with the matching profile and config
 | `cmake/gcst/`, `CMakeLists.txt` | [CMake modules](cmake.md) |
 | `.gcst/scripts/update.py`, `.gcst/.gcstu-install-*` | [Updating the template](updating.md) |
 | `conanfile.py` | [Dependencies](dependencies.md) |
-| `include/`, `hello/`, `utils/` | [Demo project](../README.md#demo-project) |
+| `include/`, `hello/`, `utils/`, `samples/` | [Demo project](../README.md#demo-project), [Settings](settings.md) |

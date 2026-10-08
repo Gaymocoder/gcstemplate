@@ -33,6 +33,7 @@ gcstemplate is a starting point for C++ projects that have to build everywhere f
   - [Presets](#presets)
   - [Dependencies](#dependencies)
   - [Adding your code](#adding-your-code)
+  - [Settings](#settings)
   - [Continuous integration](#continuous-integration)
   - [Template updates](#template-updates)
 - [Documentation](#documentation)
@@ -47,6 +48,7 @@ gcstemplate is a starting point for C++ projects that have to build everywhere f
 - **Machine-local presets.** Add, replace, deep-merge, import or remove presets by name or by regular expression, without touching the shared file.
 - **Warnings that matter.** Curated flag sets for GCC, Clang and MSVC. With `GCST_WERROR=ON` significant warnings become errors, noisy ones stay warnings.
 - **Conan 2 built in.** Dependencies are one line in `conanfile.py`; your own recipes in `recipes/` are exported automatically.
+- **Settings out of the box.** `gcst::settings` reads defaults, a config file and the command line through CLI11 in one call, and an application adds settings of its own by inheriting from it.
 - **CI with per-commit verdicts.** A full matrix with a Conan cache and a drift check. Results are attached to every commit as git notes, readable right in `git log`.
 - **Self-updating.** Keep the template as a submodule, and `build.sh --update` pulls its new version into your project — files the template dropped are removed too.
 
@@ -103,7 +105,7 @@ The preset is remembered, so the next build is just `sh build.sh` or `build.bat`
 | `win64-clang-libstdc++` | Windows | Clang + lld | libstdc++ (MinGW) | LLVM and MinGW-w64 in `PATH` |
 | `win64-clang-libc++` | Windows | Clang + lld (llvm-mingw) | libc++ | llvm-mingw in `PATH` |
 
-All presets build the `Release` configuration. Which compiler versions they ask for — currently GCC 16.1.0, Clang 19.1.7 and MSVC 19.44 — is set in one place and can be changed per machine, see [Toolchain versions](docs/presets.md#toolchain-versions). How each preset installs its toolchain in CI, a ready recipe for setting up a machine, is shown in [its `github_ci` section](docs/presets.md#the-github_ci-section).
+All presets build the `Release` configuration, or `Debug` with `--debug`. Which compiler versions they ask for — currently GCC 16.1.0, Clang 19.1.7 and MSVC 19.44 — is set in one place and can be changed per machine, see [Toolchain versions](docs/presets.md#toolchain-versions). How each preset installs its toolchain in CI, a ready recipe for setting up a machine, is shown in [its `github_ci` section](docs/presets.md#the-github_ci-section).
 
 <p align="right"><a href="#table-of-contents">↑ Contents</a></p>
 
@@ -132,8 +134,10 @@ Run from the repository root; on Windows use `build.bat` with the same arguments
 sh build.sh --preset unix-clang-libc++   # build a preset
 sh build.sh                              # build the last used preset again
 sh build.sh --clear                      # delete build/ and bin/ first
+sh build.sh --debug                      # build Debug instead of Release
 sh build.sh --verbose                    # show full compiler command lines
 GCST_WERROR=ON sh build.sh               # turn significant warnings into errors
+GCST_SAMPLES_BUILD=OFF sh build.sh       # skip the samples
 ```
 
 Executables land in `bin/`, static libraries in `build/lib/`.
@@ -169,6 +173,7 @@ Add a requirement to `conanfile.py` and find it from CMake as usual:
 ```python
 requires = (
     "boost/1.87.0",
+    "cli11/[>=2.7.2]",
     "fmt/10.2.1",
 )
 ```
@@ -203,6 +208,26 @@ gcst_binary_prepare(my_app)
 ```
 
 📖 [CMake modules](docs/cmake.md).
+
+### Settings
+
+Link `gcst::utils` and initialize the settings at the start of `main`:
+
+```cpp
+#include <gcst/gcst.h>
+
+int main(int argc, char** argv)
+{
+    if (auto r = gcst::settings::init(argc, argv); !r)
+        return r.error();
+
+    gcst::params->get("file-loglevel");   // default < settings.conf < command line
+}
+```
+
+Settings of your own come from a class derived from `gcst::basic_settings<YourClass>`, initialized with `YourClass::init(argc, argv)`.
+
+📖 [Settings](docs/settings.md).
 
 ### Continuous integration
 
@@ -247,12 +272,14 @@ The updater shows what it's about to replace, add or delete and asks before touc
 | [Continuous integration](docs/ci.md) | Triggers, build job, Conan cache, verdict notes |
 | [Updating the template](docs/updating.md) | Submodule setup, `--update` and `--local`, what gets replaced, added and deleted, the file lists, migrating from v5 |
 | [Scripting](docs/scripting.md) | The `gcst` Python package for your own tooling |
+| [Settings](docs/settings.md) | `gcst::settings`: sources and precedence, built-in options, the config file, extending by inheritance |
 
 ## Demo project
 
 The template ships a small project that exercises the whole chain on every toolchain. Replace it with your own code.
 
-- **`utils/`** — the `gcst_utils` static library, linked as `gcst::utils`. It provides `gcst::utils::exstd::exe_path()`, the absolute path of the running executable on Windows and Linux.
-- **`hello/`** — the `GCST.Hello` executable, showing off C++23 `std::print` formatting and Boost.Algorithm string utilities pulled in through Conan.
+- **`utils/`** — the `gcst_utils` static library, linked as `gcst::utils`, with its headers in `include/gcst/`; `<gcst/gcst.h>` includes all of them. It provides `gcst::utils::exstd::exe_path()`, the absolute path of the running executable on Windows and Linux, and the [settings module](docs/settings.md).
+- **`hello/`** — the `GCST.Hello` executable. It initializes the settings from its command line and `bin/settings.conf` and prints them. Its showcase module also keeps a C++23 `std::print` and Boost.Algorithm demo, `gcst::showcase::std_print()`, not called by default.
+- **`samples/`** — `samples.BasicSettings` and `samples.Mysettings`: the settings as they are, and extended by a derived class. Built unless `GCST_SAMPLES_BUILD=OFF`. See [Samples](docs/settings.md#samples).
 
 <p align="right"><a href="#table-of-contents">↑ Contents</a></p>

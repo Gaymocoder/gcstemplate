@@ -1,6 +1,6 @@
 # Local presets
 
-<sub>[README](../README.md) · [Architecture](architecture.md) · [Building](build.md) · [Presets](presets.md) · [Local presets](local-presets.md) · [Dependencies](dependencies.md) · [CMake modules](cmake.md) · [CI](ci.md) · [Updating](updating.md) · [Scripting](scripting.md)</sub>
+<sub>[README](../README.md) · [Architecture](architecture.md) · [Building](build.md) · [Presets](presets.md) · [Local presets](local-presets.md) · [Dependencies](dependencies.md) · [CMake modules](cmake.md) · [CI](ci.md) · [Updating](updating.md) · [Scripting](scripting.md) · [Settings](settings.md)</sub>
 
 `presets.local.json` changes the set of presets without touching `.gcst/presets.json`: it adds presets, replaces or merges into existing ones, and drops the ones you don't need.
 
@@ -38,17 +38,15 @@ Without `".merge": true` the whole `.vars` key is replaced, and the versions of 
 
 ## Add a preset
 
-A key that doesn't exist in the base file adds a new preset. `compiler.version` may be left out — it comes from [`.vars`](#toolchain-versions):
+A key that doesn't exist in the base file adds a new preset. `compiler.version` may be left out — it comes from [`.vars`](#toolchain-versions). This one builds with Ninja instead of Make:
 
 ```json
 {
-    "unix-gcc-libstdc++-debug": {
+    "unix-gcc-libstdc++-ninja": {
         "cmake": {
-            "description": "GCC + libstdc++, Debug",
+            "description": "GCC + libstdc++, Ninja",
             "inherits": "unix-gcc-libstdc++",
-            "cacheVariables": {
-                "CMAKE_BUILD_TYPE": "Debug"
-            }
+            "generator": "Ninja"
         },
         "conan": {
             "settings": {
@@ -56,7 +54,7 @@ A key that doesn't exist in the base file adds a new preset. `compiler.version` 
                 "arch": "x86_64",
                 "compiler": "gcc",
                 "compiler.libcxx": "libstdc++11",
-                "build_type": "Debug"
+                "build_type": "Release"
             }
         },
         "github_ci": [
@@ -65,6 +63,11 @@ A key that doesn't exist in the base file adds a new preset. `compiler.version` 
     }
 }
 ```
+
+All presets share `build/`, and CMake refuses to reuse a binary directory configured with another generator. When switching between this preset and a Make-based one, build with [`--clear`](build.md#options).
+
+> **[NOTE]**  
+> A debug build doesn't need a preset of its own: use [`--debug`](build.md#build-type). The build driver passes the build type to Conan and CMake on every run, so `build_type` and `CMAKE_BUILD_TYPE` set in a preset are overridden.
 
 ## Replace a preset
 

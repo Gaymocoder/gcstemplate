@@ -1,6 +1,6 @@
 # CMake modules
 
-<sub>[README](../README.md) · [Architecture](architecture.md) · [Building](build.md) · [Presets](presets.md) · [Local presets](local-presets.md) · [Dependencies](dependencies.md) · [CMake modules](cmake.md) · [CI](ci.md) · [Updating](updating.md) · [Scripting](scripting.md)</sub>
+<sub>[README](../README.md) · [Architecture](architecture.md) · [Building](build.md) · [Presets](presets.md) · [Local presets](local-presets.md) · [Dependencies](dependencies.md) · [CMake modules](cmake.md) · [CI](ci.md) · [Updating](updating.md) · [Scripting](scripting.md) · [Settings](settings.md)</sub>
 
 `cmake/gcst/` provides helpers that give every target the project's include paths, warning set and optimization flags in one call.
 
@@ -15,11 +15,14 @@
 
 The root `CMakeLists.txt` sets up everything the helpers rely on:
 
+- `find_package()` for every [dependency](dependencies.md), so their targets are visible to all subprojects;
 - C++23, required;
 - `GCST_INCLUDE_DIRS` pointing at `include/`;
 - static libraries in `build/lib/`, executables in `bin/`;
 - `cmake/gcst/utils.cmake` included, which also includes `cmake/gcst/warnings.cmake`;
-- one `add_subdirectory()` per subproject.
+- one `add_subdirectory()` per subproject; `samples/` is added only when `GCST_SAMPLES_BUILD` is on — see [Samples](build.md#samples).
+
+Everything after `find_package()` sits inside a `block()`, so the variables it sets don't leak out of the root file. A `block()` scopes normal variables only: target names, functions, cache variables — `find_*()` results included — and directory-level commands such as `include_directories()` stay global.
 
 Public headers go into `include/<project>/`, sources into `src/` of each subproject. The [demo project](../README.md#demo-project) follows this layout.
 
@@ -51,7 +54,7 @@ gcst_export_prepare(<target> [<object-library>...])
 
 Turns a library target into an exportable library assembled from object modules:
 
-- adds the object files of every listed object library to `<target>`;
+- links every listed object library `PRIVATE`: its object files go into `<target>`, and its link dependencies reach whatever links `<target>`;
 - creates an alias from the target name split at the first underscore: `gcst_utils` → `gcst::utils`; a name without underscores gets `name::name`;
 - sets `EXPORT_NAME` to the part after the prefix;
 - adds `GCST_INCLUDE_DIRS` for the build tree and `include` for the install tree as public include directories;
@@ -69,7 +72,16 @@ target_link_libraries(my_app PRIVATE gcst::utils)
 ```
 
 > [!NOTE]
-> Only object files are taken from the modules. Their own usage requirements — link dependencies, compile definitions — don't reach the exported library and have to be added to it directly.
+> A module's link dependencies are passed on to consumers for linking only. Its include directories and compile definitions are not: if a public header needs a dependency, link it to the exported library with `PUBLIC`. `utils/` does this with CLI11:
+>
+> ```cmake
+> add_library(gcst_utils_isettings OBJECT src/isettings.cpp)
+> target_link_libraries(gcst_utils_isettings PRIVATE CLI11::CLI11)   # to compile the module
+>
+> add_library(gcst_utils STATIC)
+> target_link_libraries(gcst_utils PUBLIC CLI11::CLI11)              # for consumers' headers
+> gcst_export_prepare(gcst_utils gcst_utils_exstd gcst_utils_isettings)
+> ```
 
 ## Warnings
 

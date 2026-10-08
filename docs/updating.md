@@ -1,6 +1,6 @@
 # Updating the template
 
-<sub>[README](../README.md) · [Architecture](architecture.md) · [Building](build.md) · [Presets](presets.md) · [Local presets](local-presets.md) · [Dependencies](dependencies.md) · [CMake modules](cmake.md) · [CI](ci.md) · [Updating](updating.md) · [Scripting](scripting.md)</sub>
+<sub>[README](../README.md) · [Architecture](architecture.md) · [Building](build.md) · [Presets](presets.md) · [Local presets](local-presets.md) · [Dependencies](dependencies.md) · [CMake modules](cmake.md) · [CI](ci.md) · [Updating](updating.md) · [Scripting](scripting.md) · [Settings](settings.md)</sub>
 
 The template can stay in your project as a git submodule. `build.sh --update` pulls its latest version and brings your copies of the template's files up to date: changed files are replaced, new ones added, dropped ones deleted.
 
@@ -63,7 +63,7 @@ Do you want to continue? [Y/n]
 | left alone | it's install-only and already exists, or it's on neither list |
 
 > **[!WARNING]**  
-> Updated files are replaced, not merged. Keep your presets in [`presets.local.json`](local-presets.md), not in `.gcst/presets.json`, and your warning tweaks outside `cmake/gcst/`.
+> Updated files are replaced, not merged. Keep your presets in [`presets.local.json`](local-presets.md), not in `.gcst/presets.json`, your warning tweaks outside `cmake/gcst/`, and the `gcst_utils` files as shipped — extend the settings [by inheritance](settings.md#adding-settings-of-your-own) instead of editing them.
 
 ## File lists
 
@@ -77,14 +77,43 @@ Both lists live in the template's `.gcst/` and are read from the submodule. One 
 | [`gcst` package](scripting.md): `.gcst/gcst/__init__.py`, `constants.py`, `detect_api.py`, `service.py` | |
 | both list files | |
 | `cmake/gcst/utils.cmake`, `cmake/gcst/warnings.cmake` | |
+| the `gcst_utils` library: `utils/CMakeLists.txt`, `utils/src/exstd.cpp`, `utils/src/isettings.cpp` | |
+| its headers: `include/gcst/gcst.h`, `include/gcst/utils.h`, and `exstd.h`, `settings.h`, `isettings.h`, `basic_settings.h`, `basic_settings.tpp` in `include/gcst/utils/` | |
 | `.gitignore`, `build.sh`, `build.bat` | |
 
-The updater itself isn't copied: it only ever runs from the submodule.
+The updater itself isn't copied: it only ever runs from the submodule. The demo executable in `hello/` and the samples in `samples/` aren't on either list.
 
 Your copies of the lists aren't configuration. The install-only list is read from the template, so editing your copy changes nothing. Your copy of the update list is the record of the previous update: the updater compares it with the template's to find the files to delete.
 
 > **[!WARNING]**  
 > Don't add your own paths to `.gcst/.gcstu-install-update`. A path that's in your copy but not in the template's counts as dropped by the template, and the file is deleted on the next update.
+
+Install-only files are never touched again, so when the template starts needing something in them, an update can't add it. The `gcst_utils` library needs CLI11 and its own subdirectory. If your `conanfile.py` and `CMakeLists.txt` were installed before it, add these lines yourself:
+
+```python
+# conanfile.py
+default_options = {
+    # ...
+    "cli11/*:header_only": False
+}
+
+requires = (
+    # ...
+    "cli11/[>=2.7.2]"
+)
+```
+
+```cmake
+# CMakeLists.txt
+find_package(CLI11 REQUIRED)
+
+block()
+    # ...
+    add_subdirectory(utils)
+endblock()
+```
+
+Why CLI11 is built this way is explained in [Dependencies](dependencies.md#conanfilepy).
 
 ## Migrating from v5
 

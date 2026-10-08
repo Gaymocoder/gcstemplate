@@ -1,6 +1,6 @@
 # Dependencies
 
-<sub>[README](../README.md) · [Architecture](architecture.md) · [Building](build.md) · [Presets](presets.md) · [Local presets](local-presets.md) · [Dependencies](dependencies.md) · [CMake modules](cmake.md) · [CI](ci.md) · [Updating](updating.md) · [Scripting](scripting.md)</sub>
+<sub>[README](../README.md) · [Architecture](architecture.md) · [Building](build.md) · [Presets](presets.md) · [Local presets](local-presets.md) · [Dependencies](dependencies.md) · [CMake modules](cmake.md) · [CI](ci.md) · [Updating](updating.md) · [Scripting](scripting.md) · [Settings](settings.md)</sub>
 
 Dependencies are managed by Conan 2: declared in `conanfile.py`, installed into `build/` before CMake runs, and found with a plain `find_package()`.
 
@@ -15,14 +15,29 @@ Uses the `CMakeToolchain` and `CMakeDeps` generators. Declare dependencies in th
 ```python
 class gcstConan(ConanFile):
     settings = "os", "arch", "compiler", "build_type"
-    default_options = {"boost/*:header_only": True}
+    default_options = {
+        "boost/*:header_only": True,
+        "cli11/*:header_only": False
+    }
 
     requires = (
         "boost/1.87.0",
+        "cli11/[>=2.7.2]"
     )
 ```
 
-Package options go into `default_options`, as with `boost/*:header_only` above.
+Package options go into `default_options`:
+
+- **Boost** is used header-only.
+- **CLI11**, which the [settings module](settings.md) is built on, is the opposite: with `header_only=False` Conan builds it as a static library and defines `CLI11_COMPILE` for its consumers, so its implementation is compiled once instead of in every file that includes it.
+
+The `win64-msvc-msvcstl` preset builds CLI11 with the `NMake Makefiles` generator, set for that package alone in the preset's [`conan` section](presets.md#the-conan-section):
+
+```json
+"conf": {
+    "cli11/*:tools.cmake.cmaketoolchain:generator": "NMake Makefiles"
+}
+```
 
 ## How `conan install` runs
 

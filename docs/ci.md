@@ -1,6 +1,6 @@
 # Continuous integration
 
-<sub>[README](../README.md) · [Architecture](architecture.md) · [Building](build.md) · [Presets](presets.md) · [Local presets](local-presets.md) · [Dependencies](dependencies.md) · [CMake modules](cmake.md) · [CI](ci.md) · [Updating](updating.md) · [Scripting](scripting.md)</sub>
+<sub>[README](../README.md) · [Architecture](architecture.md) · [Building](build.md) · [Presets](presets.md) · [Local presets](local-presets.md) · [Dependencies](dependencies.md) · [CMake modules](cmake.md) · [CI](ci.md) · [Updating](updating.md) · [Scripting](scripting.md) · [Settings](settings.md)</sub>
 
 `.github/workflows/ci.yml` builds every preset on GitHub Actions and records the result on the commit.
 
@@ -15,7 +15,7 @@ Pushes to `master` and `stable`, pull requests and manual dispatch. Triggers liv
 
 ## Build job
 
-One job per preset, with `fail-fast: false` so a broken toolchain doesn't hide the state of the others. The whole matrix builds with [`GCST_WERROR=ON`](build.md#warnings-as-errors), and `GH_TOKEN` is set from `github.token`, because the Windows toolchain scripts look their releases up with the `gh` CLI. Each job:
+One job per preset, with `fail-fast: false` so a broken toolchain doesn't hide the state of the others. The whole matrix builds with [`GCST_WERROR=ON`](build.md#warnings-as-errors) and [`GCST_SAMPLES_BUILD=ON`](build.md#samples), and `GH_TOKEN` is set from `github.token`, because the Windows toolchain scripts look their releases up with the `gh` CLI. Each job:
 
 | # | Step | Comes from |
 |---|---|---|

@@ -1,6 +1,6 @@
 # Building
 
-<sub>[README](../README.md) · [Architecture](architecture.md) · [Building](build.md) · [Presets](presets.md) · [Local presets](local-presets.md) · [Dependencies](dependencies.md) · [CMake modules](cmake.md) · [CI](ci.md) · [Updating](updating.md) · [Scripting](scripting.md)</sub>
+<sub>[README](../README.md) · [Architecture](architecture.md) · [Building](build.md) · [Presets](presets.md) · [Local presets](local-presets.md) · [Dependencies](dependencies.md) · [CMake modules](cmake.md) · [CI](ci.md) · [Updating](updating.md) · [Scripting](scripting.md) · [Settings](settings.md)</sub>
 
 Everything about producing a binary: the build scripts, their options, the stages a build goes through and where the results land. The same scripts also [update the template](updating.md).
 
@@ -8,7 +8,9 @@ Everything about producing a binary: the build scripts, their options, the stage
 - [Options](#options)
 - [Default preset](#default-preset)
 - [Stages and exit codes](#stages-and-exit-codes)
+- [Build type](#build-type)
 - [Warnings as errors](#warnings-as-errors)
+- [Samples](#samples)
 - [Output](#output)
 - [Running the generator alone](#running-the-generator-alone)
 
@@ -27,6 +29,8 @@ build.bat [options]
 |---|---|
 | `-p`, `--preset <name>` | Preset to build — one of the [base presets](../README.md#toolchains) or your [local presets](local-presets.md). When omitted, the [default preset](#default-preset) is used |
 | `-c`, `--clear` | Delete `build/` and `bin/` before building |
+| `-d`, `--debug` | Build the `Debug` configuration instead of `Release` — see [Build type](#build-type) |
+| `-bs`, `--build-samples` | Build the samples even when `GCST_SAMPLES_BUILD` turns them off — see [Samples](#samples) |
 | `-v`, `--verbose` | Pass `--verbose` to `cmake --build` |
 | `-pl`, `--presets-local <path>` | Read local presets from this file instead of `presets.local.json` — see [Using another file](local-presets.md#using-another-file) |
 | `-il`, `--ignore-local` | Ignore local presets entirely |
@@ -66,7 +70,23 @@ Each stage fails with its own exit code and prints the command it ran.
 | `7` | CMake configure | [The `cmake` section](presets.md#the-cmake-section), [CMake modules](cmake.md) |
 | `8` | CMake build | your code, [Warnings](cmake.md#warnings) |
 
-The CMake build always runs as `cmake --build build --config Release`.
+## Build type
+
+Every build is `Release`, or `Debug` with `--debug`. The driver passes the build type to all three tools on every run:
+
+| Stage | Argument |
+|---|---|
+| `conan install` | `-s build_type=Release` or `Debug` |
+| `cmake --preset` | `-DCMAKE_BUILD_TYPE=Release` or `Debug` |
+| `cmake --build` | `--config Release` or `Debug` |
+
+Command-line values take precedence over the preset, so the `build_type` in a preset's `conan` section and its `CMAKE_BUILD_TYPE` have no effect on a build — `--debug` is the only switch. Passing the type on every run also means it never sticks in `CMakeCache.txt`: a build without `--debug` after a debug one is `Release` again.
+
+```sh
+sh build.sh --debug
+```
+
+Which compiler flags each configuration gets is listed in [Optimization](cmake.md#optimization).
 
 ## Warnings as errors
 
@@ -83,13 +103,34 @@ build.bat
 
 Which warnings become errors is described in [Warnings](cmake.md#warnings).
 
+## Samples
+
+The [settings samples](settings.md#samples) in `samples/` are built by default. The `GCST_SAMPLES_BUILD` environment variable turns them off:
+
+```sh
+GCST_SAMPLES_BUILD=OFF sh build.sh
+```
+
+```bat
+set GCST_SAMPLES_BUILD=OFF
+build.bat
+```
+
+| `GCST_SAMPLES_BUILD` | `--build-samples` | Samples |
+|---|---|---|
+| unset or `ON` | — | built |
+| any other value | not given | skipped |
+| any other value | given | built |
+
+The driver passes the result to CMake as `-DGCST_SAMPLES_BUILD` on every configure, the same way as [`GCST_WERROR`](#warnings-as-errors), so the choice never sticks in `CMakeCache.txt`. The root `CMakeLists.txt` adds `samples/` only when it is on, so a configure run by hand without the variable skips them.
+
 ## Output
 
 | Path | Contents |
 |---|---|
 | `build/` | Conan-generated files and the CMake binary directory |
 | `build/lib/` | Static libraries |
-| `bin/` | Executables. Multi-config generators (Visual Studio) add a per-configuration subdirectory, e.g. `bin/Release/` |
+| `bin/` | Executables. Multi-config generators (Visual Studio) add a per-configuration subdirectory: `bin/Release/` or `bin/Debug/` |
 
 Both directories are ignored by git and removed by `--clear`. The layout is set in the root `CMakeLists.txt` — see [Project conventions](cmake.md#project-conventions).
 
