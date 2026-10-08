@@ -11,6 +11,7 @@
 .gcst/gcst/detect_api.py
 .gcst/scripts/build.py
 .gcst/scripts/configure.py
+.gcst/gcstu_conan_deps.py
 .gcst/.gcstu-install-only
 .gcst/.gcstu-install-update
 cmake/gcst/utils.cmake
