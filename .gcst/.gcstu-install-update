@@ -15,6 +15,16 @@
 .gcst/.gcstu-install-update
 cmake/gcst/utils.cmake
 cmake/gcst/warnings.cmake
+utils/src/exstd.cpp
+utils/CMakeLists.txt
+utils/src/isettings.cpp
+include/gcst/gcst.h
+include/gcst/utils.h
+include/gcst/utils/exstd.h
+include/gcst/utils/settings.h
+include/gcst/utils/isettings.h
+include/gcst/utils/basic_settings.h
+include/gcst/utils/basic_settings.tpp
 .gitignore
 build.bat
 build.sh
