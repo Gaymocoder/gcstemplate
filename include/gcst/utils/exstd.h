@@ -15,6 +15,7 @@ namespace gcst
             typedef std::expected <int, int> etype;
 
             fs::path exe_path();
+            std::string strnow();
         }
 
         using namespace gcst::utils::exstd;

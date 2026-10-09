@@ -1,6 +1,8 @@
 #include "gcst/utils/exstd.h"
 
 #include <string>
+#include <chrono>
+#include <format>
 
 #ifdef _WIN32
     #include <windows.h>
@@ -39,5 +41,11 @@ fs::path exe_path()
 }
 
 #endif
+
+std::string strnow()
+{
+    auto now = std::chrono::floor <std::chrono::seconds> (std::chrono::system_clock::now());
+    return std::format("{0:%F_%H-%M-%S}", now);
+}
 
 }
