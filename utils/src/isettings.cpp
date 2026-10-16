@@ -9,9 +9,15 @@
 namespace gcst::utils 
 {
 
-std::string_view isettings::get(std::string key)
+std::expected <std::string_view, int> isettings::get(std::string key)
 {
-    return this->dict.at(key);
+    if (auto it = dict.find(key); it != dict.end())
+    {
+        if (it->second != "")
+            return it->second;
+        return std::unexpected(1);
+    }
+    return std::unexpected(2);
 }
     
 void isettings::set(std::string key, std::string value)
@@ -59,6 +65,18 @@ void isettings::reset_to_defaults()
     this->write();
 }
 
+gcst::etype isettings::parse()
+{
+    this->cli->set_config("--config", this->config_path.string());
+    try {
+        this->cli->parse(this->argc, this->argv);
+    } catch (CLI::ParseError &e) {
+        return std::unexpected(this->cli->exit(e));
+    }
+
+    return 0;
+}
+
 gcst::etype isettings::extract()
 {
     const std::vector <std::string> loglevels {
@@ -72,12 +90,8 @@ gcst::etype isettings::extract()
     this->cli->add_option("-cll,--console-loglevel", this->dict["console-loglevel"])
         ->check(CLI::IsMember(loglevels, CLI::ignore_case));
     
-    this->cli->set_config("--config", this->config_path.string());
-    try {
-        this->cli->parse(this->argc, this->argv);
-    } catch (CLI::ParseError &e) {
-        return std::unexpected(this->cli->exit(e));
-    }
+    if (auto result = this->parse(); !result)
+        return std::unexpected(1);
 
     fs::create_directories(this->dict["logdir-path"]);
     return 0;

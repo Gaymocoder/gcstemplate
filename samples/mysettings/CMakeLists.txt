@@ -8,7 +8,7 @@ block()
     add_library(mysettings OBJECT ${mysettings_lib})
     add_executable(gcst_sample_mysettings ${main_exe})
 
-    target_link_libraries(mysettings PRIVATE gcst::utils)
+    target_link_libraries(mysettings PUBLIC gcst::utils)
     target_link_libraries(gcst_sample_mysettings PRIVATE mysettings)
 
     gcst_binary_prepare(mysettings)

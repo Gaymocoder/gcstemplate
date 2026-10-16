@@ -8,6 +8,6 @@ int main(int argc, char** argv)
         return r.error();
 
     // After successful initializaton parsed params are stored in gcst::params
-    std::println("Port: {}", gcst::params->get("port"));
-    std::println("Level: {}", gcst::params->get("level"));
+    std::println("Port: {}", gcst::params->get("port").value());
+    std::println("Level: {}", gcst::params->get("level").value());
 }

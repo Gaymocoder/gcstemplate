@@ -1,7 +1,7 @@
 #ifndef __GCST_UTILS_BASIC_SETTINGS_TPP__
 #define __GCST_UTILS_BASIC_SETTINGS_TPP__
 
-#include "gcst/utils/settings.h"
+#include "gcst/utils/basic_settings.h"
 
 #include <memory>
 
@@ -16,7 +16,7 @@ gcst::etype basic_settings <dsettings> ::init(Args&&... args)
     if (auto result = lparams->load(); !result)
         return result;
 
-    params = std::move(lparams);
+    gcst::params = std::move(lparams);
     return 0;
 }
 

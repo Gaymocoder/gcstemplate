@@ -6,29 +6,34 @@
 
 namespace CLI {class App;}
 
-namespace gcst::utils
+namespace gcst
 {
-    template <class dsettings = void>
-    class basic_settings : public isettings
+    namespace utils
     {
-        using actual = std::conditional_t <std::is_void_v <dsettings>, basic_settings, dsettings>;
-        
-        private:
-            struct enabler : actual
-            {
-                template <class... A>
-                enabler(A&&... a) : actual(std::forward <A> (a)...) {}
-            };
-        
-        protected:
-            using isettings::isettings;
-        
-        public:
-            template <class... Args>
-            static gcst::etype init(Args&&... args);
+        template <class dsettings = void>
+        class basic_settings : public isettings
+        {
+            using actual = std::conditional_t <std::is_void_v <dsettings>, basic_settings, dsettings>;
+            
+            private:
+                struct enabler : actual
+                {
+                    template <class... A>
+                    enabler(A&&... a) : actual(std::forward <A> (a)...) {}
+                };
+            
+            protected:
+                using isettings::isettings;
+            
+            public:
+                template <class... Args>
+                static gcst::etype init(Args&&... args);
 
-            ~basic_settings() = default;
-    };
+                ~basic_settings() = default;
+        };
+    }
+
+    using gcst::utils::basic_settings;
 }
 
 #include "gcst/utils/basic_settings.tpp"

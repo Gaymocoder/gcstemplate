@@ -3,9 +3,4 @@
 
 #include "gcst/utils.h"
 
-namespace gcst
-{
-    using namespace gcst::utils;
-}
-
 #endif

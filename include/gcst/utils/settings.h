@@ -10,7 +10,7 @@ namespace gcst
         typedef basic_settings <> settings;
     }
     
-    using utils::settings;
+    using gcst::utils::settings;
 }
 
 #endif

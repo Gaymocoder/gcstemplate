@@ -3,51 +3,59 @@
 
 #include <map>
 #include <memory>
+#include <expected>
 
 #include "gcst/utils/exstd.h"
 
 namespace CLI { class App; }
 
-namespace gcst::utils
+namespace gcst
 {
-    class isettings
+    namespace utils
     {
-        private:
-            int argc;
-            char** argv;
+        class isettings
+        {
+            private:
+                int argc;
+                char** argv;
 
-        protected:
-            isettings(int argc, char** argv, std::shared_ptr <CLI::App> lcli = nullptr);
+            protected:
+                isettings(int argc, char** argv, std::shared_ptr <CLI::App> lcli = nullptr);
 
-            std::shared_ptr <CLI::App> cli;
-            std::map <std::string, std::string> dict;
+                std::shared_ptr <CLI::App> cli;
+                std::map <std::string, std::string> dict;
 
-            fs::path mydir;
-            fs::path config_path;
+                fs::path mydir;
+                fs::path config_path;
 
-            virtual etype load();
-            virtual etype extract();
+                etype parse();
 
-        public:
-            enum class type {
-                flag,
-                option,
-            };
+                virtual etype load();
+                virtual etype extract();
 
-            virtual void write();
-            virtual void set_to_defaults();
-            virtual void reset_to_defaults();
+            public:
+                enum class type {
+                    flag,
+                    option,
+                };
 
-            void set(std::string, std::string);
-            void set(std::string, std::string, type settype);
-            std::string_view get(std::string);
+                virtual void write();
+                virtual void set_to_defaults();
+                virtual void reset_to_defaults();
 
-            const std::map <std::string, std::string>& list();
+                void set(std::string, std::string);
+                void set(std::string, std::string, type settype);
+                std::expected <std::string_view, int> get(std::string);
 
-            virtual ~isettings() = 0;
-    };
+                const std::map <std::string, std::string>& list();
 
-    inline std::unique_ptr <isettings> params;
+                virtual ~isettings() = 0;
+        };
+
+        inline std::unique_ptr <isettings> params = nullptr;
+    }
+
+    using gcst::utils::params;
 }
 
 #endif
