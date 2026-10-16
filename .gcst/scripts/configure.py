@@ -277,19 +277,19 @@ def presets_extract(presets, cmake_out, conan_out, out_ghci_steps, out_ghci_matr
                 gcstout(f"-- (service) Adding global vars:")
                 additional_vars = {}
                 for varkey in VARS:
-                    if varkey.lower().endswith("version"):
+                    if varkey.lower().endswith("version") and isinstance(VARS[varkey], dict):
                         buf = {}
                         tag = varkey[:-8]
-                        for envkey in ['LOCAL', 'GITHUB_CI']:
+                        for envkey in VARS[varkey]:
                             version = gcst.versions(VARS[varkey][envkey.lower()])
-                            buf[f'{tag}_{envkey}_FULL_VERSION'] = version.full
-                            buf[f'{tag}_{envkey}_MAJOR_VERSION'] = version.major
+                            buf[f'{tag}_{envkey.upper()}_FULL_VERSION'] = version.full
+                            buf[f'{tag}_{envkey.upper()}_MAJOR_VERSION'] = version.major
                             if varkey.lower().startswith('msvc'):
                                 conanized = version.major + version.minor[0]
                                 if 'runtime' in varkey.lower():
                                     conanized = 'v' + conanized
-                                buf[f'{tag}_{envkey}_CONAN_VERSION'] = conanized
-                            buf[f'{tag}_{envkey}_FULL_VERSION'] = VARS[varkey][envkey.lower()]
+                                buf[f'{tag}_{envkey.upper()}_CONAN_VERSION'] = conanized
+                            buf[f'{tag}_{envkey.upper()}_FULL_VERSION'] = VARS[varkey][envkey.lower()]
 
                         for varkey in buf:
                             gcstout(f"-- -- {varkey}: {buf[varkey]}")
@@ -324,6 +324,7 @@ def presets_write(cmake_presets, conan_profiles, github_ci):
         for key in conan_profiles:
             profile_path = conan_profiles_dir/key
             gcstout(f"-- ./{profile_path.relative_to(gcst.paths.repo)}")
+            conan_profiles[key] = process_gcstvars(conan_profiles[key], key)
             with open(profile_path, 'w', encoding = 'utf-8') as f:
                 f.write(conan_profiles[key])
         gcstout()

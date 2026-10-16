@@ -1,5 +1,6 @@
 {
     ".vars": {
+        "C++_VERSION": "23",
         "GCC_VERSION": {
             "local": "16.1.0",
             "github_ci": "16.1.0"
@@ -106,6 +107,7 @@
                 "arch": "x86_64",
                 "compiler": "clang",
                 "compiler.libcxx": "libc++",
+                "compiler.cppstd": "{gcst::C++_VERSION}",
                 "build_type": "Release"
             },
             "conf": {
@@ -139,6 +141,7 @@
                 "arch": "x86_64",
                 "compiler": "clang",
                 "compiler.libcxx": "libstdc++11",
+                "compiler.cppstd": "{gcst::C++_VERSION}",
                 "build_type": "Release"
             },
             "conf": {
@@ -172,6 +175,7 @@
                 "arch": "x86_64",
                 "compiler": "gcc",
                 "compiler.libcxx": "libstdc++11",
+                "compiler.cppstd": "{gcst::C++_VERSION}",
                 "build_type": "Release"
             }
         },
@@ -200,6 +204,7 @@
                 "arch": "x86_64",
                 "compiler": "clang",
                 "compiler.libcxx": "libc++",
+                "compiler.cppstd": "{gcst::C++_VERSION}",
                 "build_type": "Release"
             },
             "conf": {
@@ -236,6 +241,7 @@
                 "arch": "x86_64",
                 "compiler": "clang",
                 "compiler.libcxx": "libstdc++11",
+                "compiler.cppstd": "{gcst::C++_VERSION}",
                 "build_type": "Release"
             },
             "conf": {
@@ -273,6 +279,7 @@
                 "compiler": "clang",
                 "compiler.runtime": "dynamic",
                 "compiler.runtime_type": "Release",
+                "compiler.cppstd": "{gcst::C++_VERSION}",
                 "build_type": "Release"
             }
         },
@@ -307,6 +314,7 @@
                 "arch": "x86_64",
                 "compiler": "gcc",
                 "compiler.libcxx": "libstdc++11",
+                "compiler.cppstd": "{gcst::C++_VERSION}",
                 "build_type": "Release"
             },
             "conf": {
@@ -338,6 +346,7 @@
                 "compiler": "msvc",
                 "compiler.runtime": "dynamic",
                 "compiler.runtime_type": "Release",
+                "compiler.cppstd": "{gcst::C++_VERSION}",
                 "build_type": "Release"
             },
             "conf": {
