@@ -16,7 +16,7 @@ gcst::etype basic_logger <dlogger> ::init(Args&&... args)
     if (!GCST_SETTINGS_INITED)
         return std::unexpected(1);
 
-    auto lfparam = gcst::params->get("logfile");
+    auto lfparam = gcst::params->get("logfile-name");
     std::string lfilename = lfparam ? std::string(*lfparam) : gcst::utils::strnow() + ".gcstlog";
 
     gcst::journal = std::make_unique <enabler> (lfilename, std::forward <Args> (args)...);

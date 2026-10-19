@@ -85,6 +85,7 @@ gcst::etype isettings::extract()
 
     this->cli->add_flag("-oc, --override-config", this->dict["override-config"]);
     this->cli->add_option("-ldp,--logdir-path", this->dict["logdir-path"]);
+    this->cli->add_option("-lfn,--logfile-name", this->dict["logfile-name"]);
     this->cli->add_option("-fll,--file-loglevel", this->dict["file-loglevel"])
         ->check(CLI::IsMember(loglevels, CLI::ignore_case));
     this->cli->add_option("-cll,--console-loglevel", this->dict["console-loglevel"])
