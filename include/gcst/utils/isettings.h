@@ -7,6 +7,8 @@
 
 #include "gcst/utils/exstd.h"
 
+#define GCST_SETTINGS_INITED (gcst::utils::params)
+
 namespace CLI { class App; }
 
 namespace gcst
@@ -28,7 +30,7 @@ namespace gcst
                 fs::path mydir;
                 fs::path config_path;
 
-                etype parse() final;
+                virtual etype parse() final;
 
                 virtual etype load();
                 virtual etype extract();
