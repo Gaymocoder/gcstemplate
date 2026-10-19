@@ -28,7 +28,7 @@ namespace gcst
                 fs::path mydir;
                 fs::path config_path;
 
-                etype parse();
+                etype parse() final;
 
                 virtual etype load();
                 virtual etype extract();
@@ -43,9 +43,9 @@ namespace gcst
                 virtual void set_to_defaults();
                 virtual void reset_to_defaults();
 
-                void set(std::string, std::string);
-                void set(std::string, std::string, type settype);
-                std::expected <std::string_view, int> get(std::string);
+                virtual void set(std::string, std::string);
+                virtual void set(std::string, std::string, type settype);
+                virtual std::expected <std::string_view, int> get(std::string);
 
                 const std::map <std::string, std::string>& list();
 
