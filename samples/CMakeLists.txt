@@ -3,3 +3,4 @@ project(gcstemplate_samples)
 
 add_subdirectory(mysettings)
 add_subdirectory(basic_settings)
+add_subdirectory(basic_logger)
