@@ -1,11 +1,15 @@
 #ifndef __GCST_UTILS_ILOGGER_H__
 #define __GCST_UTILS_ILOGGER_H__
 
+#include <mutex>
 #include <string>
+#include <filesystem>
 
-#include <spdlog/spdlog.h>
+#include <spdlog/fwd.h>
 
 #include "gcst/utils/exstd.h"
+
+namespace fs = std::filesystem;
 
 #define GCST_LOGGER_INITED (gcst::utils::journal)
 
@@ -22,12 +26,24 @@ namespace gcst
     {
         class ilogger
         {
-            protected:
-                ilogger(std::string);
-                std::string _filename;
+            using spdsink_ptr = std::shared_ptr <spdlog::sinks::sink>;
 
+            protected:
+                ilogger(const fs::path&, std::string);
+
+                fs::path _filepath;
+                
+                virtual gcst::etype setup();
+                
+                virtual gcst::etype formatter_init();
+                virtual std::expected <spdsink_ptr, int> file_sink_init();
+                virtual std::expected <spdsink_ptr, int> console_sink_init();
+                
             public:
-                std::string_view filename();
+                const fs::path& filepath() const;
+                
+                std::shared_ptr <spdlog::logger> logger;
+                virtual ~ilogger() = 0;
         };
 
         inline std::unique_ptr <ilogger> journal = nullptr;
