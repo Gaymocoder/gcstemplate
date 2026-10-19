@@ -19,6 +19,8 @@ list(APPEND gcst_utils_objs gcst_utils_isettings)
 target_link_libraries(gcst_utils_ilogger PUBLIC spdlog::spdlog)
 target_link_libraries(gcst_utils_isettings PUBLIC CLI11::CLI11)
 
+target_compile_definitions(gcst_utils_ilogger PUBLIC SPDLOG_ACTIVE_LEVEL=SPDLOG_LEVEL_TRACE)
+
 gcst_binary_prepare(gcst_utils_exstd)
 gcst_binary_prepare(gcst_utils_ilogger)
 gcst_binary_prepare(gcst_utils_isettings)
