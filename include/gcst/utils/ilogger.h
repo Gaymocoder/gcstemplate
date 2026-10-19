@@ -1,5 +1,5 @@
-#ifndef __GCST_UTILS_LOGGER_H__
-#define __GCST_UTILS_LOGGER_H__
+#ifndef __GCST_UTILS_ILOGGER_H__
+#define __GCST_UTILS_ILOGGER_H__
 
 #include <string>
 
@@ -7,14 +7,14 @@
 
 #include "gcst/utils/exstd.h"
 
-#define GCST_SPDLOG_INITED (gcst::utils::journal)
+#define GCST_LOGGER_INITED (gcst::utils::journal)
 
-#define TRACE     if(GCST_SPDLOG_INITED) SPDLOG_TRACE
-#define DEBUG     if(GCST_SPDLOG_INITED) SPDLOG_DEBUG
-#define INFO      if(GCST_SPDLOG_INITED) SPDLOG_INFO
-#define WARN      if(GCST_SPDLOG_INITED) SPDLOG_WARN
-#define ERROR     if(GCST_SPDLOG_INITED) SPDLOG_ERROR
-#define CRITICAL  if(GCST_SPDLOG_INITED) SPDLOG_CRITICAL
+#define TRACE     if(GCST_LOGGER_INITED) SPDLOG_TRACE
+#define DEBUG     if(GCST_LOGGER_INITED) SPDLOG_DEBUG
+#define INFO      if(GCST_LOGGER_INITED) SPDLOG_INFO
+#define WARN      if(GCST_LOGGER_INITED) SPDLOG_WARN
+#define ERROR     if(GCST_LOGGER_INITED) SPDLOG_ERROR
+#define CRITICAL  if(GCST_LOGGER_INITED) SPDLOG_CRITICAL
 
 namespace gcst
 {
