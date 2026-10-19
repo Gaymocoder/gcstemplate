@@ -3,7 +3,7 @@
 #include <print>
 #include <filesystem>
 
-#include <spdlog/cfg/argv.h>
+#include <spdlog/spdlog.h>
 #include <spdlog/pattern_formatter.h>
 #include <spdlog/sinks/basic_file_sink.h>
 #include <spdlog/sinks/stdout_color_sinks.h>
@@ -56,11 +56,70 @@ class file_ptr_flag : public spdlog::custom_flag_formatter
         }
 };
 
-std::string_view ilogger::filename()
+const fs::path& ilogger::filepath() const
 {
-    return this->_filename;
+    return this->_filepath;
 }
 
-ilogger::ilogger(std::string lfilename) : _filename(lfilename) {}
+gcst::etype ilogger::formatter_init()
+{
+    auto formatter = std::make_unique <spdlog::pattern_formatter> ();
+    
+    formatter->add_flag <file_ptr_flag> ('K');
+    formatter->set_pattern("[%d.%m.%Y %T.%f]  %^%-8l%$  %-15K %v");
+
+    if (!this->logger)
+        return std::unexpected(1);
+
+    this->logger->set_formatter(std::move(formatter));
+    return 0;
+}
+
+std::expected <ilogger::spdsink_ptr, int> ilogger::file_sink_init()
+{
+    if (!GCST_SETTINGS_INITED)
+        return std::unexpected(1);
+    
+    auto file_loglevel = gcst::params->get("file-loglevel");
+    auto file_sink = std::make_shared <spdlog::sinks::basic_file_sink_mt> (this->filepath().string(), false);
+    file_sink->set_level(spdlog::level::from_str(std::string(*file_loglevel)));
+    return file_sink;
+}
+
+std::expected <ilogger::spdsink_ptr, int> ilogger::console_sink_init()
+{
+    if (!GCST_SETTINGS_INITED)
+        return std::unexpected(1);
+    
+    auto console_loglevel = gcst::params->get("console-loglevel");
+    auto console_sink = std::make_shared <spdlog::sinks::stderr_color_sink_mt> ();
+    console_sink->set_level(spdlog::level::from_str(std::string(*console_loglevel)));
+
+    return console_sink;
+}
+
+gcst::etype ilogger::setup()
+{
+    auto file_sink = this->file_sink_init();
+    auto console_sink = this->console_sink_init();
+
+    if (!(file_sink && console_sink))
+        return std::unexpected(1);
+
+    this->logger = std::make_shared <spdlog::logger> (logger_name, spdlog::sinks_init_list {*file_sink, *console_sink});
+    this->logger->set_level(spdlog::level::trace);
+    this->logger->flush_on(spdlog::level::trace);
+    this->formatter_init();
+
+    spdlog::set_default_logger(this->logger);
+    return 0;
+}
+
+ilogger::ilogger(const fs::path& dir, std::string filename)
+{
+    this->_filepath = dir/filename;
+}
+
+ilogger::~ilogger() {}
 
 }
