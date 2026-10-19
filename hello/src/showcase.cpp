@@ -101,7 +101,7 @@ void test_cli()
     for(auto& [key, value] : gcst::params->list())
         std::println("{}: \"{}\"", key, value);
 
-    std::println("logfilename: {}", gcst::journal->filename());
+    std::println("logfile: {}", gcst::journal->filepath().string());
 }
 
 }
