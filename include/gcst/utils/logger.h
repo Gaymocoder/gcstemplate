@@ -1,34 +1,16 @@
 #ifndef __GCST_UTILS_LOGGER_H__
 #define __GCST_UTILS_LOGGER_H__
 
-#include <string>
+#include "gcst/utils/basic_logger.h"
 
-#include <spdlog/spdlog.h>
-
-#define GCST_SPDLOG_INITED gcst::utils::spdlog::inited()
-
-#define TRACE     if(GCST_SPDLOG_INITED) SPDLOG_TRACE
-#define DEBUG     if(GCST_SPDLOG_INITED) SPDLOG_DEBUG
-#define INFO      if(GCST_SPDLOG_INITED) SPDLOG_INFO
-#define WARN      if(GCST_SPDLOG_INITED) SPDLOG_WARN
-#define ERROR     if(GCST_SPDLOG_INITED) SPDLOG_ERROR
-#define CRITICAL  if(GCST_SPDLOG_INITED) SPDLOG_CRITICAL
-
-namespace gcst::utils
+namespace gcst
 {
-    class logger
+    namespace utils
     {
-        private:
-            logger();
-            bool _inited;
-
-        public:
-            static void init();
-
-            const bool& inited();
+        typedef basic_logger <> logger;
     }
 
-    std::unique_ptr <gcst::utils::log> journal;
+    using gcst::utils::logger;
 }
 
 #endif
