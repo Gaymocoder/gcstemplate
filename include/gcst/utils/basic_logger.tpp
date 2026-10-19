@@ -26,7 +26,7 @@ gcst::etype basic_logger <dlogger> ::init(Args&&... args)
     std::string lfilename = std::string(*lfparam);
 
     auto ljournal = std::make_unique <enabler> (lfiledir, lfilename, std::forward <Args> (args)...);
-    ljournal->setup();
+    if (!ljournal->setup()) return std::unexpected(4);
     
     gcst::journal = std::move(ljournal);
     return 0;

@@ -109,7 +109,9 @@ gcst::etype ilogger::setup()
     this->logger = std::make_shared <spdlog::logger> (logger_name, spdlog::sinks_init_list {*file_sink, *console_sink});
     this->logger->set_level(spdlog::level::trace);
     this->logger->flush_on(spdlog::level::trace);
-    this->formatter_init();
+    
+    if (auto result = this->formatter_init(); !result)
+        return std::unexpected(2);
 
     spdlog::set_default_logger(this->logger);
     return 0;
