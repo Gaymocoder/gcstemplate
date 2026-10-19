@@ -44,7 +44,7 @@ void isettings::write()
 {
     std::ofstream fconf = std::ofstream(this->config_path);
     for(const auto& [key, value] : this->dict)
-        if (key != "override-config")
+        if (key != "override-config" && key != "logfile-name")
             fconf << std::format("{}=\'{}\'\n", key, value);
 }
 
@@ -52,6 +52,9 @@ void isettings::set_to_defaults()
 {
     fs::path log_dir = this->mydir/"logs";
     this->set("logdir-path", log_dir.string());
+
+    std::string logfile_name = gcst::utils::strnow() + ".gcstlog";
+    this->set("logfile-name", logfile_name);
     
     this->set("file-loglevel", "info");
     this->set("console-loglevel", "info");
