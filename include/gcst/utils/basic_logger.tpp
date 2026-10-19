@@ -17,9 +17,18 @@ gcst::etype basic_logger <dlogger> ::init(Args&&... args)
         return std::unexpected(1);
 
     auto lfparam = gcst::params->get("logfile-name");
-    std::string lfilename = lfparam ? std::string(*lfparam) : gcst::utils::strnow() + ".gcstlog";
+    if (!lfparam) return std::unexpected(2);
+        
+    auto ldparam = gcst::params->get("logdir-path");
+    if (!ldparam) return std::unexpected(3);
 
-    gcst::journal = std::make_unique <enabler> (lfilename, std::forward <Args> (args)...);
+    fs::path lfiledir = std::string(*ldparam);
+    std::string lfilename = std::string(*lfparam);
+
+    auto ljournal = std::make_unique <enabler> (lfiledir, lfilename, std::forward <Args> (args)...);
+    ljournal->setup();
+    
+    gcst::journal = std::move(ljournal);
     return 0;
 }
 

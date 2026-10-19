@@ -3,6 +3,8 @@
 
 #include "gcst/utils/basic_logger.h"
 
+#include <spdlog/spdlog.h>
+
 namespace gcst
 {
     namespace utils
