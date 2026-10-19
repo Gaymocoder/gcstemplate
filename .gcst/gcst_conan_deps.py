@@ -3,9 +3,11 @@ from conan.tools.cmake import CMakeToolchain, CMakeDeps
 
 class gcstDeps(ConanFile):
     default_options = {
-        "cli11/*:header_only": False
+        "cli11/*:header_only": False,
+        "spdlog/*:header_only": False
     }
 
     requires = (
         "cli11/[>=2.7.2]",
+        "spdlog/[>=1.17.0]"
     )

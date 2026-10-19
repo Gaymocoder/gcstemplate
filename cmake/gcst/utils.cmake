@@ -22,7 +22,7 @@ function(gcst_export_prepare target_name)
 
     foreach(obj IN LISTS ARGN)
         gcst_message("-- Adding source-object '${obj}' to target '${target_name}'")
-        target_link_libraries(${target_name} PRIVATE ${obj})
+        target_link_libraries(${target_name} PUBLIC ${obj})
     endforeach()
 
     string(FIND "${target_name}" "_" POS)
