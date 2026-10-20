@@ -18,13 +18,13 @@ jobs:
       matrix:
         include:
         - preset: unix-clang-libc++
-          os: ubuntu-latest
+          os: ubuntu-24.04
           build: sh build.sh
         - preset: unix-clang-libstdc++
-          os: ubuntu-latest
+          os: ubuntu-24.04
           build: sh build.sh
         - preset: unix-gcc-libstdc++
-          os: ubuntu-latest
+          os: ubuntu-24.04
           build: sh build.sh
         - preset: win64-clang-libc++
           os: windows-latest

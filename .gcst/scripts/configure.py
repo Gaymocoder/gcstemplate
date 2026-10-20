@@ -142,7 +142,7 @@ def githubci_preset_process(key, preset, out_steps, out_matrix):
     matrix_preset = {"preset": f'{key}'}
     match preset["conan"]["settings"]["os"]:
         case "Linux":
-            matrix_preset["os"] = "ubuntu-latest"
+            matrix_preset["os"] = "ubuntu-24.04"
             matrix_preset["build"] = "sh build.sh"
 
         case "Windows":
@@ -314,7 +314,7 @@ def presets_write(cmake_presets, conan_profiles, github_ci):
         gcstout(f"Saving CMake presets into \"{cmake_presets_file.relative_to(gcst.paths.repo)}\"")
         with open(cmake_presets_file, 'w', encoding = 'utf-8') as f:
             text_cmake_presets = json.dumps(cmake_presets, indent = 4)
-            processed_cmake_presets = process_gcstvars(text_cmake_presets)
+            processed_cmake_presets = process_gcstvars(text_cmake_presets, "CMake presets")
             f.write(processed_cmake_presets)
         gcstout()
 
