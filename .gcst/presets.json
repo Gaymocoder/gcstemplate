@@ -247,8 +247,8 @@
             "conf": {
                 "tools.build:cflags": "[\"--target=x86_64-w64-mingw32\"]",
                 "tools.build:cxxflags": "[\"--target=x86_64-w64-mingw32\"]",
-                "tools.build:exelinkflags": "[\"-fuse-ld=lld\", \"--target=x86_64-w64-mingw32\"]",
-                "tools.build:sharedlinkflags": "[\"-fuse-ld=lld\", \"--target=x86_64-w64-mingw32\"]",
+                "tools.build:exelinkflags": "[\"-fuse-ld=lld\", \"--target=x86_64-w64-mingw32\", \"-pthread\"]",
+                "tools.build:sharedlinkflags": "[\"-fuse-ld=lld\", \"--target=x86_64-w64-mingw32\", \"-pthread\"]",
                 "tools.build:compiler_executables": "{\"c\": \"clang\", \"cpp\": \"clang++\"}"
             }
         },
