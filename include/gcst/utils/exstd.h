@@ -6,6 +6,12 @@
 
 namespace fs = std::filesystem;
 
+namespace spdlog::level
+{
+    enum level_enum : int;
+    std::string_view format_as(level_enum l);
+}
+
 namespace gcst
 {
     namespace utils

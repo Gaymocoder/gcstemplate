@@ -8,13 +8,26 @@
     #include <windows.h>
 #endif
 
+#include <spdlog/common.h>
+
+namespace spdlog::level 
+{
+
+std::string_view format_as(level_enum l)
+{
+    auto sv = to_string_view(l);
+    return {sv.data(), sv.size()};
+}
+
+}
+
 namespace gcst::utils::exstd
 {
 
 #ifdef _WIN32
 
 fs::path exe_path()
-{    
+{
     std::wstring wstrpath(MAX_PATH, L'\0');
     while (true)
     {
