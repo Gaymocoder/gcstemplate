@@ -19,11 +19,13 @@ list(APPEND gcst_utils_objs gcst_utils_exstd)
 list(APPEND gcst_utils_objs gcst_utils_ilogger)
 list(APPEND gcst_utils_objs gcst_utils_isettings)
 
-target_link_libraries(gcst_utils_init PUBLIC spdlog::spdlog)
+target_compile_definitions(gcst_utils_ilogger PUBLIC SPDLOG_ACTIVE_LEVEL=SPDLOG_LEVEL_TRACE)
+
+target_link_libraries(gcst_utils_init PUBLIC gcst_utils_ilogger)
+target_link_libraries(gcst_utils_exstd PUBLIC spdlog::spdlog)
 target_link_libraries(gcst_utils_ilogger PUBLIC spdlog::spdlog)
 target_link_libraries(gcst_utils_isettings PUBLIC CLI11::CLI11)
-
-target_compile_definitions(gcst_utils_ilogger PUBLIC SPDLOG_ACTIVE_LEVEL=SPDLOG_LEVEL_TRACE)
+target_link_libraries(gcst_utils_isettings PUBLIC gcst_utils_ilogger)
 
 gcst_binary_prepare(gcst_utils_init)
 gcst_binary_prepare(gcst_utils_exstd)
