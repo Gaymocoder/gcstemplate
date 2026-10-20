@@ -1,6 +1,6 @@
 # Settings
 
-<sub>[README](../README.md) · [Architecture](architecture.md) · [Building](build.md) · [Presets](presets.md) · [Local presets](local-presets.md) · [Dependencies](dependencies.md) · [CMake modules](cmake.md) · [CI](ci.md) · [Updating](updating.md) · [Scripting](scripting.md) · [Settings](settings.md)</sub>
+<sub>[README](../README.md) · [Architecture](architecture.md) · [Building](build.md) · [Presets](presets.md) · [Local presets](local-presets.md) · [Dependencies](dependencies.md) · [CMake modules](cmake.md) · [CI](ci.md) · [Updating](updating.md) · [Scripting](scripting.md) · [Settings](settings.md) · [Logging](logging.md)</sub>
 
 `gcst::settings`, part of the `gcst::utils` library, collects an application's settings from three sources — built-in defaults, a config file and the command line — parses them with [CLI11](https://github.com/CLIUtils/CLI11) and keeps the result in `gcst::params`. Applications that need settings of their own extend it by inheritance.
 
@@ -25,7 +25,7 @@ int main(int argc, char** argv)
     if (auto r = gcst::settings::init(argc, argv); !r)
         return r.error();
 
-    std::println("file-loglevel: {}", gcst::params->get("file-loglevel"));
+    std::println("file-loglevel: {}", *gcst::params->get("file-loglevel"));
 }
 ```
 
@@ -33,7 +33,9 @@ int main(int argc, char** argv)
 target_link_libraries(my_app PRIVATE gcst::utils)
 ```
 
-`init()` must succeed before `gcst::params` is used — until then it is empty.
+`init()` must succeed before `gcst::params` is used — until then it is empty. `get()` returns `std::expected<std::string_view, int>`: the value, or an error for an unknown key or an empty value — see [Reference](#reference).
+
+To start the [logger](logging.md) too, call `gcst::init(argc, argv)` instead: it initializes the settings and then the logger.
 
 ## Where values come from
 
@@ -50,6 +52,7 @@ Every setting starts with its default and can be overridden; a higher source win
 | Key | Option | Default | Values |
 |---|---|---|---|
 | `logdir-path` | `-ldp`, `--logdir-path` | `logs/` next to the executable | any path; the directory is created after a successful parse |
+| `logfile-name` | `-lfn`, `--logfile-name` | the start time, `<YYYY-MM-DD>_<hh-mm-ss>.gcstlog` | the [log file](logging.md#where-records-go) name inside `logdir-path`; never written to the config file |
 | `file-loglevel` | `-fll`, `--file-loglevel` | `info` | `trace`, `debug`, `info`, `warn`, `error`, `critical` |
 | `console-loglevel` | `-cll`, `--console-loglevel` | `info` | same as above |
 | `override-config` | `-oc`, `--override-config` | `false` | flag: write the resulting values back to the config file |
@@ -71,7 +74,7 @@ Values are TOML literal strings, so Windows paths with backslashes are read back
 The file is written in two cases:
 
 - **it doesn't exist** — on the first run it is created with the defaults;
-- **`--override-config` is given** — the resulting values, command-line ones included, replace its contents. `override-config` itself is never written, so the flag doesn't stick.
+- **`--override-config` is given** — the resulting values, command-line ones included, replace its contents. `override-config` itself is never written, so the flag doesn't stick, and neither is `logfile-name`, so every run still starts a new log file.
 
 ## Errors
 
@@ -101,7 +104,7 @@ flowchart LR
 ```
 
 1. The object is constructed: the executable's directory and the config file path are computed, and a CLI11 parser is created.
-2. `load()` runs the rest on the fully constructed object: defaults, the first-run config file, `extract()` — which registers the options and parses the command line together with the config file — and `--override-config`.
+2. `load()` runs the rest on the fully constructed object: defaults, the first-run config file, `extract()` — which registers the options and calls `parse()` on the command line together with the config file — and `--override-config`.
 3. On success the object is moved into `gcst::params`.
 
 Because everything after the constructor runs on a complete object, the virtual functions overridden in a [derived class](#adding-settings-of-your-own) are the ones that get called.
@@ -166,7 +169,7 @@ Rules for a derived class:
 
 - **Inherit publicly** from `gcst::basic_settings<YourClass>`. The template argument tells `init()` which class to create; `gcst::settings` is simply `basic_settings<>` with nothing overridden.
 - **Keep constructors `protected`, not `private`.** `init()` creates the object through a helper class derived from yours, and a private constructor is out of its reach. `using basic_settings::basic_settings;` is enough unless you need a [constructor of your own](#a-config-file-of-your-own).
-- **Call the base versions to keep the built-in settings:** `isettings::set_to_defaults()`, and `isettings::extract()` **last** in your `extract()`. It does the parsing, so options added after it receive nothing.
+- **Call the base versions to keep the built-in settings:** `isettings::set_to_defaults()`, and `isettings::extract()` **last** in your `extract()`. It calls `parse()`, so options added after it receive nothing.
 - **Include `<CLI/CLI.hpp>`** to work with `this->cli` directly. `gcst::utils` passes CLI11 on to the targets linking it, so no extra CMake is needed.
 - **Use `gcst::params`** to read the settings: it points to your class through the `isettings` interface, and your overrides apply.
 
@@ -185,7 +188,7 @@ protected:
 
 ## Reference
 
-Names are declared in `gcst::utils` and brought into `gcst` by `<gcst/gcst.h>`.
+Names are declared in `gcst::utils`; `settings`, `basic_settings`, `params` and `etype` are also available in `gcst`.
 
 | Name | Description |
 |---|---|
@@ -194,17 +197,18 @@ Names are declared in `gcst::utils` and brought into `gcst` by `<gcst/gcst.h>`.
 | `settings` | `basic_settings<>`: the built-in settings with nothing overridden |
 | `params` | `std::unique_ptr<isettings>` holding the settings after a successful `init()` |
 | `etype` | `std::expected<int, int>` |
+| `GCST_SETTINGS_INITED` | Macro, true once the settings are initialized |
 
 Public members of `isettings`:
 
 | Member | Description |
 |---|---|
-| `std::string_view get(key)` | The current value. Throws `std::out_of_range` for an unknown key |
-| `void set(key, value)` | Sets a value |
-| `void set(key, value, type)` | Sets a value and registers `--<key>` with the parser as `type::option` or `type::flag` |
+| `virtual std::expected<std::string_view, int> get(key)` | The current value; error `1` for an empty value, `2` for an unknown key |
+| `virtual void set(key, value)` | Sets a value |
+| `virtual void set(key, value, type)` | Sets a value and registers `--<key>` with the parser as `type::option` or `type::flag` |
 | `const std::map<std::string, std::string>& list()` | All keys and values |
 | `virtual void set_to_defaults()` | Sets the default values |
-| `virtual void write()` | Writes every value except `override-config` to the config file |
+| `virtual void write()` | Writes every value except `override-config` and `logfile-name` to the config file |
 | `virtual void reset_to_defaults()` | `set_to_defaults()`, then `write()` |
 
 Protected members, available to derived classes:
@@ -215,12 +219,13 @@ Protected members, available to derived classes:
 | `std::map<std::string, std::string> dict` | The values; options bind to its entries |
 | `fs::path mydir` | Directory of the running executable |
 | `fs::path config_path` | Config file path, `mydir / "settings.conf"` by default |
-| `virtual etype extract()` | Registers the built-in options and parses the command line and the config file |
+| `virtual etype extract()` | Registers the built-in options, then calls `parse()` |
+| `virtual etype parse() final` | Parses the command line and the config file |
 | `virtual etype load()` | Everything `init()` does after construction |
 
 ## Samples
 
-`samples/` holds two minimal programs, built with the rest of the project unless [`GCST_SAMPLES_BUILD`](build.md#samples) turns them off:
+`samples/` holds two settings programs next to the [logger samples](logging.md#samples), built with the rest of the project unless [`GCST_SAMPLES_BUILD`](build.md#samples) turns them off:
 
 | Directory | Executable | Shows |
 |---|---|---|

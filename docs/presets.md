@@ -1,6 +1,6 @@
 # Presets
 
-<sub>[README](../README.md) · [Architecture](architecture.md) · [Building](build.md) · [Presets](presets.md) · [Local presets](local-presets.md) · [Dependencies](dependencies.md) · [CMake modules](cmake.md) · [CI](ci.md) · [Updating](updating.md) · [Scripting](scripting.md) · [Settings](settings.md)</sub>
+<sub>[README](../README.md) · [Architecture](architecture.md) · [Building](build.md) · [Presets](presets.md) · [Local presets](local-presets.md) · [Dependencies](dependencies.md) · [CMake modules](cmake.md) · [CI](ci.md) · [Updating](updating.md) · [Scripting](scripting.md) · [Settings](settings.md) · [Logging](logging.md)</sub>
 
 The format of `.gcst/presets.json`: what a preset consists of and what each part turns into. Local presets use the same format — what they can do on top of it is described in [Local presets](local-presets.md).
 
@@ -35,6 +35,7 @@ A preset is a key in `.gcst/presets.json` with three sections:
             "arch": "x86_64",
             "compiler": "clang",
             "compiler.libcxx": "libc++",
+            "compiler.cppstd": "{gcst::C++_VERSION}",
             "build_type": "Release"
         },
         "conf": {
@@ -73,6 +74,7 @@ os=Linux
 arch=x86_64
 compiler=clang
 compiler.libcxx=libc++
+compiler.cppstd=23
 build_type=Release
 compiler.version=19
 
@@ -83,6 +85,8 @@ tools.build:compiler_executables={"c": "clang", "cpp": "clang++"}
 ```
 
 `compiler.version` isn't in the preset: when it's missing, the generator fills it from [`.vars`](#toolchain-versions), and the same happens to `compiler.runtime_version` of a Clang preset that targets the MSVC runtime. Set them explicitly in the preset to pin a version to that preset alone.
+
+`{gcst::...}` tags are replaced in the profile too. Every base preset sets `compiler.cppstd` to `{gcst::C++_VERSION}`, so the dependencies are built with the project's C++ standard.
 
 `settings.os` is required for another reason too: it picks the runner and the build command of the preset's CI job.
 
@@ -142,10 +146,11 @@ The resulting step order is:
 
 ## Toolchain versions
 
-Compiler versions live in one place, the `.vars` service key, separately for your machine and for CI:
+Compiler versions and the C++ standard live in one place, the `.vars` service key, separately for your machine and for CI:
 
 ```json
 ".vars": {
+    "C++_VERSION": "23",
     "GCC_VERSION":          { "local": "16.1.0", "github_ci": "16.1.0" },
     "CLANG_VERSION":        { "local": "19.1.7", "github_ci": "19.1.7" },
     "MSVC_VERSION":         { "local": "19.44",  "github_ci": "19.44"  },
@@ -153,9 +158,9 @@ Compiler versions live in one place, the `.vars` service key, separately for you
 }
 ```
 
-The generator picks `github_ci` when it runs on a GitHub runner and `local` otherwise. Values are plain numeric versions, such as `16.1.0` or `19.44`.
+The generator picks `github_ci` when it runs on a GitHub runner and `local` otherwise. Values are plain numeric versions, such as `16.1.0` or `19.44`. A key holding a plain string instead, like `C++_VERSION`, is the same everywhere. `C++_VERSION` is the standard the dependencies are built with; the project's own code takes it from `CMAKE_CXX_STANDARD` in the root `CMakeLists.txt`.
 
-Every key ending in `_VERSION` also produces derived values, for both environments:
+Every key ending in `_VERSION` whose value has the two sides also produces derived values, for both environments:
 
 | Derived name | Value for `"16.1.0"` |
 |---|---|
@@ -168,7 +173,7 @@ Every key ending in `_VERSION` also produces derived values, for both environmen
 The values are used in two places:
 
 - **Conan profiles** — a preset without `compiler.version` gets the major version of `<COMPILER>_VERSION`, where `<COMPILER>` is its `settings.compiler` in upper case; MSVC presets get the `_CONAN_VERSION` form instead.
-- **The generated `ci.yml`** — every `{gcst::<name>}` tag is replaced with the value of `<name>`. Names are case-insensitive, unknown names are left alone.
+- **Tags** — every `{gcst::<name>}` tag in the generated `ci.yml` and in the Conan profiles is replaced with the value of `<name>`. Names are case-insensitive, unknown names are left alone.
 
 Versions for your own machine go into `presets.local.json` — see [Toolchain versions](local-presets.md#toolchain-versions) there.
 

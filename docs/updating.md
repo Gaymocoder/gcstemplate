@@ -1,6 +1,6 @@
 # Updating the template
 
-<sub>[README](../README.md) · [Architecture](architecture.md) · [Building](build.md) · [Presets](presets.md) · [Local presets](local-presets.md) · [Dependencies](dependencies.md) · [CMake modules](cmake.md) · [CI](ci.md) · [Updating](updating.md) · [Scripting](scripting.md) · [Settings](settings.md)</sub>
+<sub>[README](../README.md) · [Architecture](architecture.md) · [Building](build.md) · [Presets](presets.md) · [Local presets](local-presets.md) · [Dependencies](dependencies.md) · [CMake modules](cmake.md) · [CI](ci.md) · [Updating](updating.md) · [Scripting](scripting.md) · [Settings](settings.md) · [Logging](logging.md)</sub>
 
 The template can stay in your project as a git submodule. `build.sh --update` pulls its latest release and brings your copies of the template's files up to date: changed files are replaced, new ones added, dropped ones deleted.
 
@@ -63,7 +63,7 @@ Do you want to continue? [Y/n]
 | left alone | it's install-only and already exists, or it's on neither list |
 
 > **[!WARNING]**  
-> Updated files are replaced, not merged. Keep your presets in [`presets.local.json`](local-presets.md), not in `.gcst/presets.json`, your warning tweaks outside `cmake/gcst/`, your dependencies in `conanfile.py`, not in `.gcst/gcst_conan_deps.py`, and the `gcst_utils` files as shipped — extend the settings [by inheritance](settings.md#adding-settings-of-your-own) instead of editing them.
+> Updated files are replaced, not merged. Keep your presets in [`presets.local.json`](local-presets.md), not in `.gcst/presets.json`, your warning tweaks outside `cmake/gcst/`, your dependencies in `conanfile.py`, not in `.gcst/gcst_conan_deps.py`, and the `gcst_utils` files as shipped — extend the [settings](settings.md#adding-settings-of-your-own) and the [logger](logging.md#customizing-the-logger) by inheritance instead of editing them.
 
 ## File lists
 
@@ -73,13 +73,13 @@ Both lists live in the template's `.gcst/` and are read from the submodule. One 
 |---|---|
 | `.github/workflows/ci.yml` | `conanfile.py` |
 | CI toolchain installers: `.github/workflows/scripts/gcc.sh`, `gcc.ps1`, `clang.sh`, `clang-msvc.ps1`, `clang-mingw.ps1` | `CMakeLists.txt` |
-| `.gcst/presets.json`, `.gcst/scripts/build.py`, `.gcst/scripts/configure.py` | |
+| `.gcst/presets.json`, `.gcst/scripts/build.py`, `.gcst/scripts/configure.py`, `.gcst/scripts/conan_cache_fresh.py` | |
 | the template's [Conan dependencies](dependencies.md#conanfilepy): `.gcst/gcst_conan_deps.py` | |
 | [`gcst` package](scripting.md): `.gcst/gcst/__init__.py`, `constants.py`, `detect_api.py`, `service.py` | |
 | both list files | |
 | `cmake/gcst/utils.cmake`, `cmake/gcst/warnings.cmake` | |
-| the `gcst_utils` library: `utils/CMakeLists.txt`, `utils/src/exstd.cpp`, `utils/src/isettings.cpp` | |
-| its headers: `include/gcst/gcst.h`, `include/gcst/utils.h`, and `exstd.h`, `settings.h`, `isettings.h`, `basic_settings.h`, `basic_settings.tpp` in `include/gcst/utils/` | |
+| the `gcst_utils` library: `utils/CMakeLists.txt`, `utils/src/init.cpp`, `exstd.cpp`, `ilogger.cpp`, `isettings.cpp` | |
+| its headers: `include/gcst/gcst.h`, `include/gcst/utils.h`, and `init.h`, `exstd.h`, `settings.h`, `isettings.h`, `basic_settings.h`, `basic_settings.tpp`, `logger.h`, `ilogger.h`, `basic_logger.h`, `basic_logger.tpp` in `include/gcst/utils/` | |
 | `.gitignore`, `build.sh`, `build.bat` | |
 
 The updater itself isn't copied: it only ever runs from the submodule. The demo executable in `hello/` and the samples in `samples/` aren't on either list.
@@ -91,7 +91,7 @@ Your copies of the lists aren't configuration. The install-only list is read fro
 
 Install-only files are never touched again, so changes the template makes to them don't reach your project. The template's own dependencies therefore live in `.gcst/gcst_conan_deps.py`, which is updated, and your `conanfile.py` only inherits them. A `conanfile.py` installed before the base class appeared needs this one edit by hand — make it inherit `gcstDeps` as [shown in Dependencies](dependencies.md#conanfilepy). From then on, new dependencies of the template's code arrive with `--update`.
 
-The root `CMakeLists.txt` needs nothing new: `utils/` finds CLI11 on its own, and `add_subdirectory(utils)` has been in it since v5.0.0.
+The root `CMakeLists.txt` needs nothing new: `utils/` finds CLI11 and spdlog on its own, and `add_subdirectory(utils)` has been in it since v5.0.0.
 
 ## Migrating from v5
 

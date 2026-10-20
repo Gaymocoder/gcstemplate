@@ -1,6 +1,6 @@
 # Dependencies
 
-<sub>[README](../README.md) · [Architecture](architecture.md) · [Building](build.md) · [Presets](presets.md) · [Local presets](local-presets.md) · [Dependencies](dependencies.md) · [CMake modules](cmake.md) · [CI](ci.md) · [Updating](updating.md) · [Scripting](scripting.md) · [Settings](settings.md)</sub>
+<sub>[README](../README.md) · [Architecture](architecture.md) · [Building](build.md) · [Presets](presets.md) · [Local presets](local-presets.md) · [Dependencies](dependencies.md) · [CMake modules](cmake.md) · [CI](ci.md) · [Updating](updating.md) · [Scripting](scripting.md) · [Settings](settings.md) · [Logging](logging.md)</sub>
 
 Dependencies are managed by Conan 2: declared in `conanfile.py` on top of the template's own ones, installed into `build/` before CMake runs, and found with a plain `find_package()`.
 
@@ -49,9 +49,10 @@ class gcstConan(gcstDeps):
 | Package | Declared in | Used by |
 |---|---|---|
 | `cli11/[>=2.7.2]`, `header_only=False` | `gcstDeps` | the [settings module](settings.md) |
-| `boost/1.87.0`, `header_only=True` | `conanfile.py` | the demo in `hello/` |
+| `spdlog/[>=1.17.0]`, `header_only=False` | `gcstDeps` | the [logger](logging.md); brings in `fmt` |
+| `boost/1.87.0`, `header_only=True` | `conanfile.py` | nothing in the template — an example of a dependency of your own |
 
-CLI11 is built as a static library: with `header_only=False` Conan defines `CLI11_COMPILE` for its consumers, so its implementation is compiled once instead of in every file that includes it.
+CLI11 and spdlog are built as static libraries: with `header_only=False` Conan defines `CLI11_COMPILE` and `SPDLOG_COMPILED_LIB` for their consumers, so their implementation is compiled once instead of in every file that includes it.
 
 The `win64-msvc-msvcstl` preset builds CLI11 with the `NMake Makefiles` generator, set for that package alone in the preset's [`conan` section](presets.md#the-conan-section):
 

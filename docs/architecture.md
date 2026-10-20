@@ -1,6 +1,6 @@
 # Architecture
 
-<sub>[README](../README.md) · [Architecture](architecture.md) · [Building](build.md) · [Presets](presets.md) · [Local presets](local-presets.md) · [Dependencies](dependencies.md) · [CMake modules](cmake.md) · [CI](ci.md) · [Updating](updating.md) · [Scripting](scripting.md) · [Settings](settings.md)</sub>
+<sub>[README](../README.md) · [Architecture](architecture.md) · [Building](build.md) · [Presets](presets.md) · [Local presets](local-presets.md) · [Dependencies](dependencies.md) · [CMake modules](cmake.md) · [CI](ci.md) · [Updating](updating.md) · [Scripting](scripting.md) · [Settings](settings.md) · [Logging](logging.md)</sub>
 
 How the parts of the template fit together, which files are generated and which are yours, and where everything lives.
 
@@ -56,6 +56,7 @@ The build driver then installs dependencies with the matching profile and config
 │   ├── scripts/
 │   │   ├── build.py             build driver
 │   │   ├── configure.py         preset generator
+│   │   ├── conan_cache_fresh.py decides whether CI saves the Conan cache
 │   │   └── update.py            template updater
 │   ├── .gcstu-install-update    files kept up to date by the updater
 │   ├── .gcstu-install-only      files installed only once
@@ -68,10 +69,10 @@ The build driver then installs dependencies with the matching profile and config
 │   ├── utils.cmake              target helpers
 │   └── warnings.cmake           warning and optimization sets
 ├── docs/                        this documentation
-├── include/gcst/                public headers: gcst.h, utils/, showcase.h
+├── include/gcst/                public headers: gcst.h, utils.h, utils/
 ├── hello/                       demo executable
-├── samples/                     settings samples
-├── utils/                       gcst_utils library: exstd, settings
+├── samples/                     settings and logger samples
+├── utils/                       gcst_utils library: exstd, settings, logger
 ├── build.sh                     Linux entry point
 ├── build.bat                    Windows entry point
 ├── conanfile.py                 dependencies
@@ -83,8 +84,8 @@ The build driver then installs dependencies with the matching profile and config
 | `.gcst/gcst/` | [Scripting](scripting.md) |
 | `.gcst/scripts/build.py`, `build.sh`, `build.bat` | [Building](build.md) |
 | `.gcst/scripts/configure.py`, `.gcst/presets.json` | [Presets](presets.md) |
-| `.github/workflows/` | [Continuous integration](ci.md) |
+| `.github/workflows/`, `.gcst/scripts/conan_cache_fresh.py` | [Continuous integration](ci.md) |
 | `cmake/gcst/`, `CMakeLists.txt` | [CMake modules](cmake.md) |
 | `.gcst/scripts/update.py`, `.gcst/.gcstu-install-*` | [Updating the template](updating.md) |
 | `conanfile.py`, `.gcst/gcst_conan_deps.py` | [Dependencies](dependencies.md) |
-| `include/`, `hello/`, `utils/`, `samples/` | [Demo project](../README.md#demo-project), [Settings](settings.md) |
+| `include/`, `hello/`, `utils/`, `samples/` | [Demo project](../README.md#demo-project), [Settings](settings.md), [Logging](logging.md) |

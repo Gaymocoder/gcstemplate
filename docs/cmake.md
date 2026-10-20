@@ -1,6 +1,6 @@
 # CMake modules
 
-<sub>[README](../README.md) · [Architecture](architecture.md) · [Building](build.md) · [Presets](presets.md) · [Local presets](local-presets.md) · [Dependencies](dependencies.md) · [CMake modules](cmake.md) · [CI](ci.md) · [Updating](updating.md) · [Scripting](scripting.md) · [Settings](settings.md)</sub>
+<sub>[README](../README.md) · [Architecture](architecture.md) · [Building](build.md) · [Presets](presets.md) · [Local presets](local-presets.md) · [Dependencies](dependencies.md) · [CMake modules](cmake.md) · [CI](ci.md) · [Updating](updating.md) · [Scripting](scripting.md) · [Settings](settings.md) · [Logging](logging.md)</sub>
 
 `cmake/gcst/` provides helpers that give every target the project's include paths, warning set and optimization flags in one call.
 
@@ -15,8 +15,9 @@
 
 The root `CMakeLists.txt` sets up everything the helpers rely on:
 
-- `find_package()` for the project's own [dependencies](dependencies.md); `utils/` finds CLI11 itself, since the root file isn't [updated](updating.md#file-lists) after installation;
+- `find_package()` for the project's own [dependencies](dependencies.md); `utils/` finds CLI11 and spdlog itself, since the root file isn't [updated](updating.md#file-lists) after installation;
 - C++23, required;
+- `compile_commands.json` in `build/`, for clangd, clang-tidy and other tools;
 - `GCST_INCLUDE_DIRS` pointing at `include/`;
 - static libraries in `build/lib/`, executables in `bin/`;
 - `cmake/gcst/utils.cmake` included, which also includes `cmake/gcst/warnings.cmake`;
@@ -54,7 +55,7 @@ gcst_export_prepare(<target> [<object-library>...])
 
 Turns a library target into an exportable library assembled from object modules:
 
-- links every listed object library `PRIVATE`: its object files go into `<target>`, and its link dependencies reach whatever links `<target>`;
+- links every listed object library `PUBLIC`: its object files go into `<target>`, and its usage requirements reach whatever links `<target>`;
 - creates an alias from the target name split at the first underscore: `gcst_utils` → `gcst::utils`; a name without underscores gets `name::name`;
 - sets `EXPORT_NAME` to the part after the prefix;
 - adds `GCST_INCLUDE_DIRS` for the build tree and `include` for the install tree as public include directories;
@@ -72,16 +73,15 @@ target_link_libraries(my_app PRIVATE gcst::utils)
 ```
 
 > [!NOTE]
-> A module's link dependencies are passed on to consumers for linking only. Its include directories and compile definitions are not: if a public header needs a dependency, link it to the exported library with `PUBLIC`. `utils/` does this with CLI11:
+> What a module links `PUBLIC` reaches consumers whole: include directories, compile definitions and libraries. What it links `PRIVATE` reaches them for linking only. Link a dependency `PUBLIC` when consumers need it too — `utils/` does this with CLI11, which [derived settings](settings.md#adding-settings-of-your-own) use directly:
 >
 > ```cmake
 > find_package(CLI11 REQUIRED)
 >
 > add_library(gcst_utils_isettings OBJECT src/isettings.cpp)
-> target_link_libraries(gcst_utils_isettings PRIVATE CLI11::CLI11)   # to compile the module
+> target_link_libraries(gcst_utils_isettings PUBLIC CLI11::CLI11)   # for the module and its consumers
 >
 > add_library(gcst_utils STATIC)
-> target_link_libraries(gcst_utils PUBLIC CLI11::CLI11)              # for consumers' headers
 > gcst_export_prepare(gcst_utils gcst_utils_exstd gcst_utils_isettings)
 > ```
 

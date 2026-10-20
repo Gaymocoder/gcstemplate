@@ -1,6 +1,6 @@
 # Building
 
-<sub>[README](../README.md) · [Architecture](architecture.md) · [Building](build.md) · [Presets](presets.md) · [Local presets](local-presets.md) · [Dependencies](dependencies.md) · [CMake modules](cmake.md) · [CI](ci.md) · [Updating](updating.md) · [Scripting](scripting.md) · [Settings](settings.md)</sub>
+<sub>[README](../README.md) · [Architecture](architecture.md) · [Building](build.md) · [Presets](presets.md) · [Local presets](local-presets.md) · [Dependencies](dependencies.md) · [CMake modules](cmake.md) · [CI](ci.md) · [Updating](updating.md) · [Scripting](scripting.md) · [Settings](settings.md) · [Logging](logging.md)</sub>
 
 Everything about producing a binary: the build scripts, their options, the stages a build goes through and where the results land. The same scripts also [update the template](updating.md).
 
@@ -105,7 +105,7 @@ Which warnings become errors is described in [Warnings](cmake.md#warnings).
 
 ## Samples
 
-The [settings samples](settings.md#samples) in `samples/` are built by default. The `GCST_SAMPLES_BUILD` environment variable turns them off:
+The samples in `samples/` — for the [settings](settings.md#samples) and the [logger](logging.md#samples) — are built by default. The `GCST_SAMPLES_BUILD` environment variable turns them off:
 
 ```sh
 GCST_SAMPLES_BUILD=OFF sh build.sh

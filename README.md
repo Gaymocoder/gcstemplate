@@ -33,7 +33,7 @@ gcstemplate is a starting point for C++ projects that have to build everywhere f
   - [Presets](#presets)
   - [Dependencies](#dependencies)
   - [Adding your code](#adding-your-code)
-  - [Settings](#settings)
+  - [Settings and logging](#settings-and-logging)
   - [Continuous integration](#continuous-integration)
   - [Template updates](#template-updates)
 - [Documentation](#documentation)
@@ -49,6 +49,7 @@ gcstemplate is a starting point for C++ projects that have to build everywhere f
 - **Warnings that matter.** Curated flag sets for GCC, Clang and MSVC. With `GCST_WERROR=ON` significant warnings become errors, noisy ones stay warnings.
 - **Conan 2 built in.** Dependencies are one line in `conanfile.py`; your own recipes in `recipes/` are exported automatically.
 - **Settings out of the box.** `gcst::settings` reads defaults, a config file and the command line through CLI11 in one call, and an application adds settings of its own by inheriting from it.
+- **Logging out of the box.** `gcst::logger` writes to a file and the console through spdlog, with paths and levels taken from the settings; one `gcst::init()` call starts both.
 - **CI with per-commit verdicts.** A full matrix with a Conan cache and a drift check. Results are attached to every commit as git notes, readable right in `git log`.
 - **Self-updating.** Keep the template as a submodule, and `build.sh --update` pulls its latest release into your project — files the template dropped are removed too.
 
@@ -155,14 +156,14 @@ Base presets live in `.gcst/presets.json`, together with the toolchain versions 
         ".merge": true,
         "cmake": {
             "cacheVariables": {
-                "CMAKE_EXPORT_COMPILE_COMMANDS": "ON"
+                "CMAKE_COLOR_DIAGNOSTICS": "ON"
             }
         }
     }
 }
 ```
 
-This drops every Windows preset and makes the GCC preset emit `compile_commands.json`. Local presets reshape the CI matrix too: if they are meant for your machine only, build with `--no-ghci`.
+This drops every Windows preset and makes the GCC preset color its diagnostics. Local presets reshape the CI matrix too: if they are meant for your machine only, build with `--no-ghci`.
 
 📖 [Presets](docs/presets.md) — the preset format · [Local presets](docs/local-presets.md) — everything `presets.local.json` can do.
 
@@ -209,25 +210,26 @@ gcst_binary_prepare(my_app)
 
 📖 [CMake modules](docs/cmake.md).
 
-### Settings
+### Settings and logging
 
-Link `gcst::utils` and initialize the settings at the start of `main`:
+Link `gcst::utils` and initialize the settings and the logger at the start of `main`:
 
 ```cpp
 #include <gcst/gcst.h>
 
 int main(int argc, char** argv)
 {
-    if (auto r = gcst::settings::init(argc, argv); !r)
+    if (auto r = gcst::init(argc, argv); !r)
         return r.error();
 
-    gcst::params->get("file-loglevel");   // default < settings.conf < command line
+    auto level = gcst::params->get("file-loglevel");   // default < settings.conf < command line
+    INFO("File log level: {}", *level);                 // to bin/logs/ and the console
 }
 ```
 
-Settings of your own come from a class derived from `gcst::basic_settings<YourClass>`, initialized with `YourClass::init(argc, argv)`.
+Settings of your own come from a class derived from `gcst::basic_settings<YourClass>`, a logger of your own from `gcst::basic_logger<YourClass>`.
 
-📖 [Settings](docs/settings.md).
+📖 [Settings](docs/settings.md) · [Logging](docs/logging.md).
 
 ### Continuous integration
 
@@ -273,13 +275,14 @@ The updater shows what it's about to replace, add or delete and asks before touc
 | [Updating the template](docs/updating.md) | Submodule setup, `--update` and `--local`, what gets replaced, added and deleted, the file lists, migrating from v5 |
 | [Scripting](docs/scripting.md) | The `gcst` Python package for your own tooling |
 | [Settings](docs/settings.md) | `gcst::settings`: sources and precedence, built-in options, the config file, extending by inheritance |
+| [Logging](docs/logging.md) | `gcst::logger`: the log file and the console, levels, logging macros, extending by inheritance |
 
 ## Demo project
 
 The template ships a small project that exercises the whole chain on every toolchain. Replace it with your own code.
 
-- **`utils/`** — the `gcst_utils` static library, linked as `gcst::utils`, with its headers in `include/gcst/`; `<gcst/gcst.h>` includes all of them. It provides `gcst::utils::exstd::exe_path()`, the absolute path of the running executable on Windows and Linux, and the [settings module](docs/settings.md).
-- **`hello/`** — the `GCST.Hello` executable. It initializes the settings from its command line and `bin/settings.conf` and prints them. Its showcase module also keeps a C++23 `std::print` and Boost.Algorithm demo, `gcst::showcase::std_print()`, not called by default.
-- **`samples/`** — `samples.BasicSettings` and `samples.Mysettings`: the settings as they are, and extended by a derived class. Built unless `GCST_SAMPLES_BUILD=OFF`. See [Samples](docs/settings.md#samples).
+- **`utils/`** — the `gcst_utils` static library, linked as `gcst::utils`, with its headers in `include/gcst/`; `<gcst/gcst.h>` includes all of them. It provides `gcst::utils::exstd::exe_path()`, the absolute path of the running executable on Windows and Linux, the [settings module](docs/settings.md) and the [logger](docs/logging.md).
+- **`hello/`** — the `GCST.Hello` executable. It initializes the settings and the logger with `gcst::init()` and logs a greeting to the console and `bin/logs/`.
+- **`samples/`** — `samples.BasicSettings` and `samples.Mysettings`: the settings as they are, and extended by a derived class; `samples.BasicLogger` and `samples.Mylogger`: the logger likewise. Built unless `GCST_SAMPLES_BUILD=OFF`. See the [settings samples](docs/settings.md#samples) and the [logger samples](docs/logging.md#samples).
 
 <p align="right"><a href="#table-of-contents">↑ Contents</a></p>

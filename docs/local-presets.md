@@ -1,6 +1,6 @@
 # Local presets
 
-<sub>[README](../README.md) · [Architecture](architecture.md) · [Building](build.md) · [Presets](presets.md) · [Local presets](local-presets.md) · [Dependencies](dependencies.md) · [CMake modules](cmake.md) · [CI](ci.md) · [Updating](updating.md) · [Scripting](scripting.md) · [Settings](settings.md)</sub>
+<sub>[README](../README.md) · [Architecture](architecture.md) · [Building](build.md) · [Presets](presets.md) · [Local presets](local-presets.md) · [Dependencies](dependencies.md) · [CMake modules](cmake.md) · [CI](ci.md) · [Updating](updating.md) · [Scripting](scripting.md) · [Settings](settings.md) · [Logging](logging.md)</sub>
 
 `presets.local.json` changes the set of presets without touching `.gcst/presets.json`: it adds presets, replaces or merges into existing ones, and drops the ones you don't need.
 
@@ -83,7 +83,7 @@ With `".merge": true` the local preset is deep-merged into the base one: nested 
         ".merge": true,
         "cmake": {
             "cacheVariables": {
-                "CMAKE_EXPORT_COMPILE_COMMANDS": "ON"
+                "CMAKE_COLOR_DIAGNOSTICS": "ON"
             }
         }
     }

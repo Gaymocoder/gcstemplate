@@ -1,6 +1,6 @@
 # Continuous integration
 
-<sub>[README](../README.md) · [Architecture](architecture.md) · [Building](build.md) · [Presets](presets.md) · [Local presets](local-presets.md) · [Dependencies](dependencies.md) · [CMake modules](cmake.md) · [CI](ci.md) · [Updating](updating.md) · [Scripting](scripting.md) · [Settings](settings.md)</sub>
+<sub>[README](../README.md) · [Architecture](architecture.md) · [Building](build.md) · [Presets](presets.md) · [Local presets](local-presets.md) · [Dependencies](dependencies.md) · [CMake modules](cmake.md) · [CI](ci.md) · [Updating](updating.md) · [Scripting](scripting.md) · [Settings](settings.md) · [Logging](logging.md)</sub>
 
 `.github/workflows/ci.yml` builds every preset on GitHub Actions and records the result on the commit.
 
@@ -24,7 +24,7 @@ One job per preset, with `fail-fast: false` so a broken toolchain doesn't hide t
 | 3 | Restore the [Conan cache](#conan-cache) | `.common-pre` |
 | 4 | Install the preset's toolchain | the preset's [`github_ci`](presets.md#the-github_ci-section) |
 | 5 | Build with the preset | generated `Build` step |
-| 6 | Record the result for the [verdict](#verdicts-in-git-log), save the Conan cache | `.common-post` |
+| 6 | Record the result for the [verdict](#verdicts-in-git-log), save the Conan cache if it changed | `.common-post` |
 
 Which compiler versions the toolchain steps install is decided by [`.vars`](presets.md#toolchain-versions), not by the steps themselves.
 
@@ -32,9 +32,11 @@ Which compiler versions the toolchain steps install is decided by [`.vars`](pres
 
 ## Conan cache
 
-Installed packages are saved per preset after a successful dependency install and restored on the next run. The cache key covers `conanfile.py`, the preset's Conan profile and [`recipes/`](dependencies.md#local-recipes). When any of them changes, the latest cache of the preset is restored as a base and saved again under the new key.
+Installed packages are cached per preset. Every job restores the most recent cache of its preset, installs the dependencies on top of it and saves a new cache only if the install had to build or download something. `.gcst/scripts/conan_cache_fresh.py` decides that from [`build/graph.json`](dependencies.md#how-conan-install-runs): any package that didn't come from the cache makes it stale, and the packages it lists appear in the job log.
 
-Only the packages of the current dependency graph go into the cache: the job turns [`build/graph.json`](dependencies.md#how-conan-install-runs) into a package list with `conan list --graph` and hands that list to `conan cache save`.
+So the cache follows whatever changes the dependency graph — `conanfile.py`, [`.gcst/gcst_conan_deps.py`](dependencies.md#conanfilepy), [`recipes/`](dependencies.md#local-recipes), the preset's profile, or a new release matched by a version range — and a job with nothing new saves nothing. Caches are keyed `conan2-<preset>-<run id>`; older ones are no longer restored and expire on GitHub's own schedule.
+
+Only the packages of the current dependency graph go into the cache: the job turns `build/graph.json` into a package list with `conan list --graph` and hands that list to `conan cache save`.
 
 ## Verdicts in `git log`
 
