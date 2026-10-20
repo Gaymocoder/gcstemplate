@@ -6,6 +6,8 @@
 
 #include <CLI/CLI.hpp>
 
+#include "gcst/utils/logger.h"
+
 namespace gcst::utils 
 {
 
@@ -23,42 +25,56 @@ std::expected <std::string_view, int> isettings::get(std::string key)
 void isettings::set(std::string key, std::string value)
 {
     this->dict[key] = value;
+    DEBUG("Param '{}' was set to '{}'", key, value);
 }
 
 void isettings::set(std::string key, std::string value, isettings::type settype)
 {
     this->set(key, value);
+    std::string settype_str = "";
     switch (settype)
     {
         case isettings::type::flag:
             this->cli->add_flag(std::format("--{}", key), this->dict[key]);
+            settype_str = "flag";
             break;
 
         case isettings::type::option:
             this->cli->add_option(std::format("--{}", key), this->dict[key]);
+            settype_str = "option";
             break;
     }
+    TRACE("Param '{}' was added to CLI11::App as {}", key, settype_str);
 }
 
 void isettings::write()
 {
+    using DictIter = std::map <std::string, std::string> ::iterator;
+    std::vector <DictIter> written_params;
+    written_params.reserve(this->dict.size());
+
     std::ofstream fconf = std::ofstream(this->config_path);
+    DEBUG("Writing down params into {}", this->config_relpath().string());
     for(const auto& [key, value] : this->dict)
+    {
         if (key != "override-config" && key != "logfile-name")
+        {
             fconf << std::format("{}=\'{}\'\n", key, value);
+            TRACE("/tparam saved -> '{}': '{}'", key, value);
+        }
+    }
 }
 
 void isettings::set_to_defaults()
 {
     fs::path log_dir = this->mydir/"logs";
-    this->set("logdir-path", log_dir.string());
-
     std::string logfile_name = gcst::utils::strnow() + ".gcstlog";
+
+    DEBUG("Setting params to their defaults");
+    this->set("logdir-path", log_dir.string());
     this->set("logfile-name", logfile_name);
-    
     this->set("file-loglevel", "info");
     this->set("console-loglevel", "info");
-
     this->set("override-config", "false");
 }
 
@@ -70,10 +86,16 @@ void isettings::reset_to_defaults()
 
 gcst::etype isettings::parse()
 {
+    DEBUG("Parsing params from config-file ({})", this->config_relpath().string());
     this->cli->set_config("--config", this->config_path.string());
-    try {
+
+    DEBUG("Overriding params from CLI");
+    try 
+    {
         this->cli->parse(this->argc, this->argv);
-    } catch (CLI::ParseError &e) {
+    }
+    catch (CLI::ParseError &e)
+    {
         return std::unexpected(this->cli->exit(e));
     }
 
@@ -95,7 +117,10 @@ gcst::etype isettings::extract()
         ->check(CLI::IsMember(loglevels, CLI::ignore_case));
     
     if (auto result = this->parse(); !result)
+    {
+        ERROR("Failed to parse arguments from CLI with error code {}", result.error());
         return std::unexpected(1);
+    }
 
     fs::create_directories(this->dict["logdir-path"]);
     return 0;
@@ -121,11 +146,29 @@ const std::map <std::string, std::string>& isettings::list()
     return this->dict;
 }
 
+fs::path isettings::config_relpath()
+{
+    return fs::path(".")/fs::relative(this->config_path, gcst::utils::exe_path().parent_path());
+}
+
+void isettings::trace()
+{
+    for(const auto& [key, value] : this->dict)
+        TRACE("  Option {:<25}{}", std::format("'{}':", key), value);
+}
+
+void isettings::debug()
+{
+    for(const auto& [key, value] : this->dict)
+        DEBUG("  Option {:<25}{}", std::format("'{}':", key), value);
+}
+
 isettings::isettings (int largc, char** largv, std::shared_ptr <CLI::App> lcli)
     : argc(largc), argv(largv), cli(lcli), mydir(exstd::exe_path().parent_path()), config_path(mydir/"settings.conf")
 {
     if (!(this->cli)) {
         this->cli = std::make_shared <CLI::App> ("GCS.Template");
+        TRACE("CLI::App initialized");
     }
     this->cli->allow_non_standard_option_names();
 }

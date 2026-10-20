@@ -50,7 +50,10 @@ namespace gcst
                 virtual std::expected <std::string_view, int> get(std::string);
 
                 const std::map <std::string, std::string>& list();
+                virtual fs::path config_relpath() final;
 
+                virtual void trace();
+                virtual void debug();
                 virtual ~isettings() = 0;
         };
 

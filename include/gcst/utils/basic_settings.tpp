@@ -5,6 +5,8 @@
 
 #include <memory>
 
+#include "gcst/utils/logger.h"
+
 namespace gcst::utils
 {
 
@@ -15,8 +17,11 @@ gcst::etype basic_settings <dsettings> ::init(Args&&... args)
     auto lparams = std::make_unique <enabler> (std::forward <Args> (args)...);
     if (auto result = lparams->load(); !result)
         return result;
-
+        
     gcst::params = std::move(lparams);
+    
+    DEBUG("gcst::params have been inited successfully");
+    gcst::params->trace();
     return 0;
 }
 
