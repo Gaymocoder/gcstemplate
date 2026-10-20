@@ -61,17 +61,22 @@ const fs::path& ilogger::filepath() const
     return this->_filepath;
 }
 
+fs::path ilogger::relfilepath() const
+{
+    return fs::path(".")/fs::relative(this->_filepath, gcst::utils::exe_path().parent_path());
+}
+
 gcst::etype ilogger::formatter_init()
 {
     auto formatter = std::make_unique <spdlog::pattern_formatter> ();
     
     formatter->add_flag <file_ptr_flag> ('K');
-    formatter->set_pattern("[%d.%m.%Y %T.%f]  %^%-8l%$  %-15K %v");
+    formatter->set_pattern("[%d.%m.%Y %T.%f]  %^%-8l%$  %-20K %v");
 
-    if (!this->logger)
+    if (!this->_logger)
         return std::unexpected(1);
 
-    this->logger->set_formatter(std::move(formatter));
+    this->_logger->set_formatter(std::move(formatter));
     return 0;
 }
 
@@ -100,20 +105,22 @@ std::expected <ilogger::spdsink_ptr, int> ilogger::console_sink_init()
 
 gcst::etype ilogger::setup()
 {
-    auto file_sink = this->file_sink_init();
-    auto console_sink = this->console_sink_init();
+    auto lfilesink = this->file_sink_init();
+    auto lconsolesink = this->console_sink_init();
 
-    if (!(file_sink && console_sink))
+    if (!(lfilesink && lconsolesink))
         return std::unexpected(1);
 
-    this->logger = std::make_shared <spdlog::logger> (logger_name, spdlog::sinks_init_list {*file_sink, *console_sink});
-    this->logger->set_level(spdlog::level::trace);
-    this->logger->flush_on(spdlog::level::trace);
+    this->_filesink = *lfilesink;
+    this->_consolesink = *lconsolesink;
+    this->_logger = std::make_shared <spdlog::logger> (logger_name, spdlog::sinks_init_list {*lfilesink, *lconsolesink});
+    this->_logger->set_level(spdlog::level::trace);
+    this->_logger->flush_on(spdlog::level::trace);
     
     if (auto result = this->formatter_init(); !result)
         return std::unexpected(2);
 
-    spdlog::set_default_logger(this->logger);
+    spdlog::set_default_logger(this->_logger);
     return 0;
 }
 
