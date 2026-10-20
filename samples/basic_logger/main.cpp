@@ -2,11 +2,8 @@
 
 int main(int argc, char** argv)
 {
-    if (auto r = gcst::settings::init(argc, argv); !r)
-        return r.error();
-
-    if (auto l = gcst::logger::init(); !l)
-        return l.error();
+    if (auto result = gcst::init(argc, argv); !result)
+        return result.error();
 
     TRACE("This is a trace message");
     DEBUG("This is a debug message");
