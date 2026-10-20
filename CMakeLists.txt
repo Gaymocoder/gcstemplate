@@ -1,7 +1,7 @@
 cmake_minimum_required(VERSION 3.31)
 project(gcstemplate VERSION 6.1.0)
 
-find_package(Boost REQUIRED)
+find_package(spdlog REQUIRED)
 
 block()
     include(${CMAKE_CURRENT_LIST_DIR}/cmake/gcst/utils.cmake)

@@ -1,15 +1,10 @@
 #include <gcst/gcst.h>
 
-#include "gcst/showcase.h"
-
 int main(int argc, char** argv)
 {
-    if (!gcst::settings::init(argc, argv))
-        return 1;
-
-    if (!gcst::logger::init())
-        return 2;
+    if (auto result = gcst::init(argc, argv); !result)
+        return result.error();
         
-    gcst::showcase::test_cli();
+    INFO("Hello world!");
     return 0;
 }
