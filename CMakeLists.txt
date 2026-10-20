@@ -6,8 +6,6 @@ find_package(spdlog REQUIRED)
 block()
     include(${CMAKE_CURRENT_LIST_DIR}/cmake/gcst/utils.cmake)
 
-    set(CMAKE_CXX_STANDARD 23)
-    set(CMAKE_CXX_STANDARD_REQUIRED ON)
     set(CMAKE_EXPORT_COMPILE_COMMANDS ON)
 
     set(GCST_INCLUDE_DIRS "${CMAKE_CURRENT_SOURCE_DIR}/include")
