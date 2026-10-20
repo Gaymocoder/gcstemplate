@@ -313,7 +313,9 @@ def presets_write(cmake_presets, conan_profiles, github_ci):
         gcstout()
         gcstout(f"Saving CMake presets into \"{cmake_presets_file.relative_to(gcst.paths.repo)}\"")
         with open(cmake_presets_file, 'w', encoding = 'utf-8') as f:
-            json.dump(cmake_presets, f, indent = 4)
+            text_cmake_presets = json.dumps(cmake_presets, indent = 4)
+            processed_cmake_presets = process_gcstvars(text_cmake_presets)
+            f.write(processed_cmake_presets)
         gcstout()
 
     if not getArgs().no_conan:
