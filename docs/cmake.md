@@ -16,7 +16,6 @@
 The root `CMakeLists.txt` sets up everything the helpers rely on:
 
 - `find_package()` for the project's own [dependencies](dependencies.md); `utils/` finds CLI11 and spdlog itself, since the root file isn't [updated](updating.md#file-lists) after installation;
-- C++23, required;
 - `compile_commands.json` in `build/`, for clangd, clang-tidy and other tools;
 - `GCST_INCLUDE_DIRS` pointing at `include/`;
 - static libraries in `build/lib/`, executables in `bin/`;
