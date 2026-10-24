@@ -18,6 +18,7 @@ def getArgs(subscripts = 'all'):
     argvParser.add_argument('-v', '--verbose', action = 'store_true')
     argvParser.add_argument('-u', '--update', action = 'store_true')
     argvParser.add_argument('-d', '--debug', action = 'store_true')
+    argvParser.add_argument('-prl', '--parallel', default = os.cpu_count())
     argvParser.add_argument('-bs', '--build-samples', action = 'store_true')
 
     conf_args.append(argvParser.add_argument('-pl', '--presets-local', default = None))
@@ -150,11 +151,16 @@ def cmake(preset):
 
     
 def cmake_build():
+    env = os.environ.copy()
+    env['TERM'] = 'dumb'
     command = ["cmake", "--build", gcst.paths.build_dir, '--config']
     command.append('Debug' if getArgs().debug else 'Release')
+    command.extend(['--parallel', str(getArgs().parallel)])
     if getArgs().verbose:
-        command.append('--verbose')
-    return subprocess.run(command, check = False)
+        command.extend([
+            '--verbose'
+        ])
+    return subprocess.run(command, check = False, env = env)
         
 
 def main():
