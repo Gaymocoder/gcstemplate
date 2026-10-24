@@ -53,10 +53,12 @@ The options are [built-in settings](settings.md#built-in-settings). `logdir-path
 Both outputs use the same pattern — date and time with microseconds, the level, the source file and line, the message:
 
 ```
-[20.10.2026 03:48:49.823389]  info      main.cpp:7      Logging to /home/user/my-project/bin/logs/2026-10-20_03-48-49.gcstlog
+[20.10.2026 03:48:49.823389]  info      main.cpp:7           Logging to /home/user/my-project/bin/logs/2026-10-20_03-48-49.gcstlog
 ```
 
 Every record is flushed at once, so the file is complete even if the program crashes. The logger is made spdlog's default logger, so `spdlog::info()` and the other spdlog functions write to the same file and console.
+
+`gcst::utils` logs its own work too. At `info` it reports that `gcst::init()` succeeded and which file the log goes to. At `debug` it adds every option with its value and the config file it reads and writes; at `trace`, the options as they are registered with the parser and saved. Raise `--file-loglevel` or `--console-loglevel` to see it.
 
 ## Logging macros
 
@@ -69,7 +71,7 @@ Every record is flushed at once, so the file is complete even if the program cra
 | `ERROR(...)` | `error` |
 | `CRITICAL(...)` | `critical` |
 
-They take a [fmt](https://fmt.dev) format string and its arguments, like `spdlog::info()`, and record the file and line they are called from. Until the logger is initialized they do nothing, so code that logs can run before `init()` or without it.
+They take a [fmt](https://fmt.dev) format string and its arguments, like `spdlog::info()`, and record the file and line they are called from. An spdlog log level can be an argument as it is, so `filesink()->level()` and the like need no conversion. Until the logger is initialized they do nothing, so code that logs can run before `init()` or without it.
 
 ```cpp
 WARN("Port {} is busy, trying {}", port, port + 1);
@@ -105,7 +107,7 @@ flowchart LR
     D --> E["gcst::journal"]
 ```
 
-`setup()` creates both sinks, combines them into one `spdlog::logger` that passes every level on and flushes every record, applies `formatter_init()` and makes the result spdlog's default logger. The sinks filter by their own levels.
+`setup()` creates both sinks, combines them into one `spdlog::logger` that passes every level on and flushes every record, applies `formatter_init()` and makes the result spdlog's default logger. The sinks filter by their own levels, and both stay reachable afterwards through `filesink()` and `consolesink()`.
 
 This one writes to a rotating file and gives the console a short pattern:
 
@@ -195,14 +197,20 @@ Public members of `ilogger`:
 
 | Member | Description |
 |---|---|
-| `std::shared_ptr<spdlog::logger> logger` | The spdlog logger |
+| `const std::shared_ptr<spdlog::logger> logger() const` | The spdlog logger |
+| `const std::shared_ptr<spdlog::sinks::sink> filesink() const` | The file sink, with its level |
+| `const std::shared_ptr<spdlog::sinks::sink> consolesink() const` | The console sink, with its level |
 | `const fs::path& filepath() const` | The log file path |
+| `fs::path relfilepath() const` | The same path relative to the executable's directory |
 
 Protected members, available to derived classes:
 
 | Member | Description |
 |---|---|
 | `fs::path _filepath` | The log file path, `<logdir-path>/<logfile-name>` |
+| `std::shared_ptr<spdlog::logger> _logger` | The logger behind `logger()`, created by `setup()` |
+| `std::shared_ptr<spdlog::sinks::sink> _filesink` | The sink `file_sink_init()` returned |
+| `std::shared_ptr<spdlog::sinks::sink> _consolesink` | The sink `console_sink_init()` returned |
 | `virtual etype setup()` | Builds the logger from the steps below and makes it spdlog's default logger |
 | `virtual std::expected<spdlog::sink_ptr, int> file_sink_init()` | Creates the file sink |
 | `virtual std::expected<spdlog::sink_ptr, int> console_sink_init()` | Creates the console sink |

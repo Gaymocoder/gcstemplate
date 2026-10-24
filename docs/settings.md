@@ -210,6 +210,9 @@ Public members of `isettings`:
 | `virtual void set_to_defaults()` | Sets the default values |
 | `virtual void write()` | Writes every value except `override-config` and `logfile-name` to the config file |
 | `virtual void reset_to_defaults()` | `set_to_defaults()`, then `write()` |
+| `virtual fs::path config_relpath() final` | The config file path relative to the executable's directory |
+| `virtual void trace()` | Writes every key and value to the [log](logging.md) at `trace` |
+| `virtual void debug()` | The same at `debug` |
 
 Protected members, available to derived classes:
 
