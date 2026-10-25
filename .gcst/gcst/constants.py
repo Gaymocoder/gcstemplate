@@ -62,6 +62,10 @@ class _Paths:
         return self.gcst/"scripts"/"configure.py"
 
     @cached_property
+    def build_times_py(self):
+        return self.gcst/"scripts"/"build_times.py"
+
+    @cached_property
     def update_py(self):
         if self.submodule:
             return self.submodule/".gcst"/"scripts"/"update.py"

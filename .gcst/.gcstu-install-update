@@ -12,6 +12,7 @@
 .gcst/scripts/build.py
 .gcst/scripts/configure.py
 .gcst/scripts/conan_cache_fresh.py
+.gcst/scripts/build_times.py
 .gcst/gcst_conan_deps.py
 .gcst/.gcstu-install-only
 .gcst/.gcstu-install-update

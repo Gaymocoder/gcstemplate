@@ -27,7 +27,8 @@ def parseArgs(subscripts = 'all'):
     argvParser.add_argument('-v', '--verbose', action = 'store_true')
     argvParser.add_argument('-u', '--update', action = 'store_true')
     argvParser.add_argument('-d', '--debug', action = 'store_true')
-    argvParser.add_argument('-ft', '--ftime-trace', action = 'store_true')
+    argvParser.add_argument('-ft', '--ftime-trace', action = argparse.BooleanOptionalAction, default = None)
+    argvParser.add_argument('-bt', '--build-times', action = 'store_true')
     argvParser.add_argument('-bs', '--build-samples', action = 'store_true')
     argvParser.add_argument('-prl', '--parallel', default = os.cpu_count())
 
@@ -44,8 +45,9 @@ def parseArgs(subscripts = 'all'):
     if args.preset == None:
         args.preset = getDefaultPreset()
 
+    # [flag, enabled, clang only]; enabled None means "on where the compiler supports it"
     cmake_cxx_flags.extend([
-        ['-ftime-trace', args.ftime_trace],
+        ['-ftime-trace', args.ftime_trace, True],
     ])
 
 
@@ -139,9 +141,56 @@ def conan_install(profile):
     return subprocess.run(command, check = False)
 
     
+def preset_cxx_compiler(preset):
+    presets = {}
+    for filename in ["CMakePresets.json", "CMakeUserPresets.json"]:
+        path = gcst.paths.repo/filename
+        if path.exists():
+            with open(path, 'r', encoding = 'utf-8') as f:
+                presets.update({p['name']: p for p in json.load(f).get('configurePresets', [])})
+
+    pending = [preset]
+    while pending:
+        current = presets.get(pending.pop(0))
+        if not current:
+            continue
+        compiler = current.get('cacheVariables', {}).get('CMAKE_CXX_COMPILER')
+        if compiler:
+            return compiler if isinstance(compiler, str) else compiler.get('value')
+        inherits = current.get('inherits', [])
+        pending.extend([inherits] if isinstance(inherits, str) else inherits)
+    return None
+
+
+def cxx_flags(preset):
+    compiler = preset_cxx_compiler(preset)
+    clang = compiler is not None and 'clang' in Path(compiler).name.lower()
+
+    flags = []
+    for flag, enabled, clang_only in cmake_cxx_flags:
+        if enabled is False:
+            continue
+        if clang_only and not clang:
+            if enabled:
+                print(f"{flag} needs clang, preset '{preset}' uses {compiler or 'an unknown compiler'}: flag skipped")
+            continue
+        flags.append(flag)
+
+    # CMake reads CXXFLAGS only when it creates the cache, so a changed flag needs a fresh build dir
+    cache = gcst.paths.build_dir/"CMakeCache.txt"
+    if cache.exists():
+        with open(cache, 'r', encoding = 'utf-8', errors = 'replace') as f:
+            cached = next((line.split('=', 1)[1].split() for line in f if line.startswith('CMAKE_CXX_FLAGS:')), [])
+        for flag, _, _ in cmake_cxx_flags:
+            if (flag in flags) != (flag in cached):
+                state = 'without' if flag in flags else 'with'
+                print(f"build/ was configured {state} {flag}, the change applies only after a rebuild with -c")
+    return flags
+
+
 def cmake(preset):
     env = os.environ.copy()
-    env['CXXFLAGS'] = " ".join([arg[0] for arg in cmake_cxx_flags if arg])
+    env['CXXFLAGS'] = " ".join(cxx_flags(preset))
 
     command = ["cmake"]
     if preset == ".default":
@@ -169,6 +218,11 @@ def cmake_build():
             '--verbose'
         ])
     return subprocess.run(command, check = False, env = env)
+
+
+def build_times():
+    command = [sys.executable, gcst.paths.build_times_py, gcst.paths.build_dir]
+    return subprocess.run(command, check = False)
         
 
 def main():
@@ -238,6 +292,13 @@ def main():
         if result.returncode != 0:
             print("Executed command:\n", *result.args)
             return 8
+
+    # The report never changes the exit code: the build itself has succeeded
+    if args.build_times:
+        print()
+        result = build_times()
+        if result.returncode != 0:
+            print(f"Build time report failed with code {result.returncode}")
 
     return 0
 
