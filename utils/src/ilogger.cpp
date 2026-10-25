@@ -141,7 +141,7 @@ bool ilogger::is_active(loglevel level)
 
     auto& filesink = gcst::journal->filesink();
     auto& consolesink = gcst::journal->consolesink();
-    if (!(filesink->should_log(spdlevel) && consolesink->should_log(spdlevel)))
+    if (!(filesink->should_log(spdlevel) || consolesink->should_log(spdlevel)))
         return false;
 
     return true;
