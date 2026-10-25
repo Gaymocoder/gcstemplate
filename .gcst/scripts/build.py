@@ -9,17 +9,27 @@ from pathlib import Path
 
 # TODO: auto-detect preset
 
-def getArgs(subscripts = 'all'):
-    conf_args = []
-    updater_args = []
+args = None
+conf_args = []
+updater_args = []
+cmake_cxx_flags = []
+
+def parseArgs(subscripts = 'all'):
+    global cmake_cxx_flags
+    global args, conf_args, updater_args
+
+    if args or conf_args or updater_args:
+        return
+
     argvParser = argparse.ArgumentParser(prog = 'gcst-builder')
     argvParser.add_argument('-p', '--preset', default = None)
     argvParser.add_argument('-c', '--clear', action = 'store_true')
     argvParser.add_argument('-v', '--verbose', action = 'store_true')
     argvParser.add_argument('-u', '--update', action = 'store_true')
     argvParser.add_argument('-d', '--debug', action = 'store_true')
-    argvParser.add_argument('-prl', '--parallel', default = os.cpu_count())
+    argvParser.add_argument('-ft', '--ftime-trace', action = 'store_true')
     argvParser.add_argument('-bs', '--build-samples', action = 'store_true')
+    argvParser.add_argument('-prl', '--parallel', default = os.cpu_count())
 
     conf_args.append(argvParser.add_argument('-pl', '--presets-local', default = None))
     conf_args.append(argvParser.add_argument('-il', '--ignore-local', action = 'store_true'))
@@ -30,16 +40,13 @@ def getArgs(subscripts = 'all'):
 
     updater_args.append(argvParser.add_argument('--local', action = 'store_true'))
 
-    if ('update' in subscripts):
-        return updater_args
-
-    if ('configure' in subscripts):
-        return conf_args
-
     args = argvParser.parse_args()
     if args.preset == None:
         args.preset = getDefaultPreset()
-    return args
+
+    cmake_cxx_flags.extend([
+        ['-ftime-trace', args.ftime_trace],
+    ])
 
 
 def getDefaultPreset():
@@ -61,8 +68,6 @@ def clear_build_dir():
 
 
 def gcst_configure():
-    args = getArgs()
-    conf_args = getArgs(subscripts = 'configure')
     command = [sys.executable, gcst.paths.configure_py]
     command.extend(gcst.service.extract_args(args, conf_args))
 
@@ -73,8 +78,6 @@ def gcst_update():
     if not gcst.paths.update_py:
         return 1
     
-    args = getArgs()
-    updater_args = getArgs(subscripts = 'update')
     command = [sys.executable, gcst.paths.update_py]
     command.extend(gcst.service.extract_args(args, updater_args))
 
@@ -127,7 +130,7 @@ def conan_install(profile):
         "--build=missing",
         "-c", "tools.system.package_manager:mode=install",
         "-c", "tools.system.package_manager:sudo=True",
-        "-s", f"build_type={'Debug' if getArgs().debug else 'Release'}"
+        "-s", f"build_type={'Debug' if args.debug else 'Release'}"
     ]
 
     msvc_path = gcst.versions.msvc_path()
@@ -137,17 +140,21 @@ def conan_install(profile):
 
     
 def cmake(preset):
+    env = os.environ.copy()
+    env['CXXFLAGS'] = " ".join([arg[0] for arg in cmake_cxx_flags if arg])
+
     command = ["cmake"]
     if preset == ".default":
         command.extend(["-B", gcst.paths.build_dir, "-S", gcst.paths.repo])
     else:
         command.extend(["--preset", preset])
+
     command.append(f"-DGCST_WARNINGS_AS_ERRORS={os.environ['GCST_WERROR']}")
-    command.append(f"-DCMAKE_BUILD_TYPE={'Debug' if getArgs().debug else 'Release'}")
+    command.append(f"-DCMAKE_BUILD_TYPE={'Debug' if args.debug else 'Release'}")
 
     build_samples_env = True if ("GCST_SAMPLES_BUILD" not in os.environ.copy() or os.environ['GCST_SAMPLES_BUILD'] == 'ON') else False
-    command.append(f"-DGCST_SAMPLES_BUILD={"ON" if (getArgs().build_samples or build_samples_env) else "OFF"}")
-    return subprocess.run(command, cwd = gcst.paths.repo, check = False)
+    command.append(f"-DGCST_SAMPLES_BUILD={"ON" if (args.build_samples or build_samples_env) else "OFF"}")
+    return subprocess.run(command, cwd = gcst.paths.repo, check = False, env = env)
 
     
 def cmake_build():
@@ -155,9 +162,9 @@ def cmake_build():
     env['TERM'] = 'dumb'
     env['CLICOLOR_FORCE'] = '1'
     command = ["cmake", "--build", gcst.paths.build_dir, '--config']
-    command.append('Debug' if getArgs().debug else 'Release')
-    command.extend(['--parallel', str(getArgs().parallel)])
-    if getArgs().verbose:
+    command.append('Debug' if args.debug else 'Release')
+    command.extend(['--parallel', str(args.parallel)])
+    if args.verbose:
         command.extend([
             '--verbose'
         ])
@@ -165,7 +172,7 @@ def cmake_build():
         
 
 def main():
-    args = getArgs()
+    parseArgs()
     if args.update:
         if not args.local and gcst.submodule_update():
             return 1
