@@ -211,8 +211,7 @@ Public members of `isettings`:
 | `virtual void write()` | Writes every value except `override-config` and `logfile-name` to the config file |
 | `virtual void reset_to_defaults()` | `set_to_defaults()`, then `write()` |
 | `virtual fs::path config_relpath() final` | The config file path relative to the executable's directory |
-| `virtual void trace()` | Writes every key and value to the [log](logging.md) at `trace` |
-| `virtual void debug()` | The same at `debug` |
+| `virtual void log(loglevel, std::source_location = current())` | Writes every key and value to the [log](logging.md) at that level, attributed to the caller's line |
 
 Protected members, available to derived classes:
 

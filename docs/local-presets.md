@@ -6,6 +6,7 @@
 
 - [How it is applied](#how-it-is-applied)
 - [Toolchain versions](#toolchain-versions)
+- [Generators](#generators)
 - [Add a preset](#add-a-preset)
 - [Replace a preset](#replace-a-preset)
 - [Merge into a preset](#merge-into-a-preset)
@@ -35,6 +36,21 @@ The compiler versions the base presets build with live in the [`.vars`](presets.
 Now a local build asks Conan for `compiler.version=14`, while CI keeps building with GCC 16.
 
 Without `".merge": true` the whole `.vars` key is replaced, and the versions of the other compilers are gone.
+
+## Generators
+
+The base presets build with Make, and with Visual Studio for MSVC. Their generators are [`.vars` keys](presets.md#toolchain-versions) too, one per platform, so one override switches every preset of that platform. Ninja, for instance, builds the template about twice as fast from scratch:
+
+```json
+{
+    ".vars": {
+        ".merge": true,
+        "CMAKE_GENERATOR_UNIX": "Ninja"
+    }
+}
+```
+
+Ninja has to be installed. A committed `presets.local.json` switches CI too; GitHub's runners have Ninja. CMake refuses to reuse a binary directory configured with another generator, so build once with [`--clear`](build.md#options) after switching. Ninja also gives the [build time report](build.md#build-time-report) the build's wall time.
 
 ## Add a preset
 

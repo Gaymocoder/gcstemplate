@@ -11,6 +11,7 @@ Everything about producing a binary: the build scripts, their options, the stage
 - [Build type](#build-type)
 - [Warnings as errors](#warnings-as-errors)
 - [Samples](#samples)
+- [Build time report](#build-time-report)
 - [Output](#output)
 - [Running the generator alone](#running-the-generator-alone)
 
@@ -32,6 +33,8 @@ build.bat [options]
 | `-d`, `--debug` | Build the `Debug` configuration instead of `Release` — see [Build type](#build-type) |
 | `-bs`, `--build-samples` | Build the samples even when `GCST_SAMPLES_BUILD` turns them off — see [Samples](#samples) |
 | `-v`, `--verbose` | Pass `--verbose` to `cmake --build` |
+| `-prl`, `--parallel <N>` | Run up to `N` compile and link jobs at once. Defaults to the number of CPU threads |
+| `--no-ftime-trace` | Don't record compile timings — see [Build time report](#build-time-report) |
 | `-pl`, `--presets-local <path>` | Read local presets from this file instead of `presets.local.json` — see [Using another file](local-presets.md#using-another-file) |
 | `-il`, `--ignore-local` | Ignore local presets entirely |
 | `--no-conan` | Skip generating Conan profiles, [exporting recipes](dependencies.md#local-recipes) and `conan install` |
@@ -39,6 +42,7 @@ build.bat [options]
 | `--no-ghci` | Don't regenerate `.github/workflows/ci.yml` — see [Keeping CI in sync](local-presets.md#keeping-ci-in-sync) |
 | `-u`, `--update` | Update the template instead of building — see [Updating the template](updating.md#updating). Build options are ignored |
 | `--local` | With `--update`: don't pull the template submodule first |
+| `-bt`, `--build-times` | Print the [build time report](#build-time-report) of the last build instead of building. Build options are ignored |
 
 ## Default preset
 
@@ -61,7 +65,7 @@ Each stage fails with its own exit code and prints the command it ran.
 | Code | Failed stage | Where to look |
 |---|---|---|
 | `0` | — (success) | |
-| `1` | `--update`: pulling the template submodule or updating failed | [Updating the template](updating.md#updating) |
+| `1` | `--update`: pulling the template submodule or updating failed; `--build-times`: the report failed, for instance without `build/` | [Updating the template](updating.md#updating), [Build time report](#build-time-report) |
 | `2` | No preset given and no default preset remembered | [Default preset](#default-preset) |
 | `3` | Generating presets (`configure.py`) | [Presets](presets.md), [Local presets](local-presets.md) |
 | `4` | Unknown preset: no Conan profile with that name | [Toolchains](../README.md#toolchains) |
@@ -123,6 +127,24 @@ build.bat
 | any other value | given | built |
 
 The driver passes the result to CMake as `-DGCST_SAMPLES_BUILD` on every configure, the same way as [`GCST_WERROR`](#warnings-as-errors), so the choice never sticks in `CMakeCache.txt`. The root `CMakeLists.txt` adds `samples/` only when it is on, so a configure run by hand without the variable skips them.
+
+## Build time report
+
+Clang presets record how long every source file takes to compile: each object file in `build/` gets a `-ftime-trace` file next to it. `-bt` turns them into a report without building anything:
+
+```sh
+sh build.sh -bt
+```
+
+| Part | Shows |
+|---|---|
+| Header | The build's wall time and job count, the slowest source file and its share of the build, linking time |
+| Translation units | Per source file: total time, the frontend split into headers, templates and the rest, and the backend |
+| Headers, function templates | The ones that cost the most, summed over all source files |
+
+Wall time and job count come from Ninja's `.ninja_log` — see [Generators](local-presets.md#generators). With the Make generators the report says `No .ninja_log: wall clock is unknown` and shows only the per-file tables. GCC and MSVC write no trace files, so their builds have no tables either. A trace file older than its object file is left out of the report.
+
+Recording is on by default, `--no-ftime-trace` turns it off. The driver passes the choice to CMake as `-DGCST_TIME_TRACE` on every configure, so it never sticks in `CMakeCache.txt`. Switching it rebuilds every object file.
 
 ## Output
 

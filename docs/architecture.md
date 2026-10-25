@@ -55,6 +55,7 @@ The build driver then installs dependencies with the matching profile and config
 │   ├── gcst/                    shared Python package
 │   ├── scripts/
 │   │   ├── build.py             build driver
+│   │   ├── build_times.py       build time report
 │   │   ├── configure.py         preset generator
 │   │   ├── conan_cache_fresh.py decides whether CI saves the Conan cache
 │   │   └── update.py            template updater
@@ -82,7 +83,7 @@ The build driver then installs dependencies with the matching profile and config
 | Path | Described in |
 |---|---|
 | `.gcst/gcst/` | [Scripting](scripting.md) |
-| `.gcst/scripts/build.py`, `build.sh`, `build.bat` | [Building](build.md) |
+| `.gcst/scripts/build.py`, `.gcst/scripts/build_times.py`, `build.sh`, `build.bat` | [Building](build.md) |
 | `.gcst/scripts/configure.py`, `.gcst/presets.json` | [Presets](presets.md) |
 | `.github/workflows/`, `.gcst/scripts/conan_cache_fresh.py` | [Continuous integration](ci.md) |
 | `cmake/gcst/`, `CMakeLists.txt` | [CMake modules](cmake.md) |

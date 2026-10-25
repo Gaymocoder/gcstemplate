@@ -139,6 +139,7 @@ sh build.sh --debug                      # build Debug instead of Release
 sh build.sh --verbose                    # show full compiler command lines
 GCST_WERROR=ON sh build.sh               # turn significant warnings into errors
 GCST_SAMPLES_BUILD=OFF sh build.sh       # skip the samples
+sh build.sh -bt                          # where the last build spent its time
 ```
 
 Executables land in `bin/`, static libraries in `build/lib/`.
@@ -281,7 +282,7 @@ The updater shows what it's about to replace, add or delete and asks before touc
 
 The template ships a small project that exercises the whole chain on every toolchain. Replace it with your own code.
 
-- **`utils/`** — the `gcst_utils` static library, linked as `gcst::utils`, with its headers in `include/gcst/`; `<gcst/gcst.h>` includes all of them. It provides `gcst::utils::exstd::exe_path()`, the absolute path of the running executable on Windows and Linux, the [settings module](docs/settings.md) and the [logger](docs/logging.md).
+- **`utils/`** — the `gcst_utils` static library, linked as `gcst::utils`, with its headers in `include/gcst/`; `<gcst/gcst.h>` includes all of them. It provides `gcst::utils::exstd::exe_path()`, the absolute path of the running executable on Windows and Linux, `gcst::format()`, the [settings module](docs/settings.md) and the [logger](docs/logging.md).
 - **`hello/`** — the `GCST.Hello` executable. It initializes the settings and the logger with `gcst::init()` and logs a greeting to the console and `bin/logs/`.
 - **`samples/`** — `samples.BasicSettings` and `samples.Mysettings`: the settings as they are, and extended by a derived class; `samples.BasicLogger` and `samples.Mylogger`: the logger likewise. Built unless `GCST_SAMPLES_BUILD=OFF`. See the [settings samples](docs/settings.md#samples) and the [logger samples](docs/logging.md#samples).
 

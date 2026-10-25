@@ -56,7 +56,7 @@ Both outputs use the same pattern — date and time with microseconds, the level
 [20.10.2026 03:48:49.823389]  info      main.cpp:7           Logging to /home/user/my-project/bin/logs/2026-10-20_03-48-49.gcstlog
 ```
 
-Every record is flushed at once, so the file is complete even if the program crashes. The logger is made spdlog's default logger, so `spdlog::info()` and the other spdlog functions write to the same file and console.
+Every record is flushed at once, so the file is complete even if the program crashes. The logger is made spdlog's default logger, so `spdlog::info()` and the other spdlog functions write to the same file and console. Include `<spdlog/spdlog.h>` for them: `<gcst/gcst.h>` only declares spdlog's types.
 
 `gcst::utils` logs its own work too. At `info` it reports that `gcst::init()` succeeded and which file the log goes to. At `debug` it adds every option with its value and the config file it reads and writes; at `trace`, the options as they are registered with the parser and saved. Raise `--file-loglevel` or `--console-loglevel` to see it.
 
@@ -71,16 +71,33 @@ Every record is flushed at once, so the file is complete even if the program cra
 | `ERROR(...)` | `error` |
 | `CRITICAL(...)` | `critical` |
 
-They take a [fmt](https://fmt.dev) format string and its arguments, like `spdlog::info()`, and record the file and line they are called from. An spdlog log level can be an argument as it is, so `filesink()->level()` and the like need no conversion. Until the logger is initialized they do nothing, so code that logs can run before `init()` or without it.
+They take a [`std::format`](https://en.cppreference.com/w/cpp/utility/format/format) format string and its arguments and record the file and line they are called from. An argument needs a `std::formatter`; a type that has only a `fmt::formatter` doesn't compile. An spdlog log level can be an argument as it is, so `filesink()->level()` and the like need no conversion. Until the logger is initialized the macros do nothing, so code that logs can run before `init()` or without it.
 
 ```cpp
 WARN("Port {} is busy, trying {}", port, port + 1);
 ```
 
-Every level is compiled in: `gcst::utils` defines `SPDLOG_ACTIVE_LEVEL=SPDLOG_LEVEL_TRACE` for the targets linking it. Which records appear is decided at run time by the two log level settings.
+When the level is known only at run time, `GCST_LOG` takes it as a `gcst::loglevel`:
+
+```cpp
+GCST_LOG(failed ? gcst::loglevel::error : gcst::loglevel::info, "Request {} done", id);
+```
+
+`GCST_LOG_FROM` also takes the `std::source_location` to put into the record. A helper that logs on behalf of its caller takes one as a defaulted parameter, and the record shows the caller's line:
+
+```cpp
+void report(std::string_view what, std::source_location sl = std::source_location::current())
+{
+    GCST_LOG_FROM(gcst::loglevel::warn, sl, "Unexpected {}", what);
+}
+```
+
+Every level is compiled in; which records appear is decided at run time by the two log level settings. A record that neither output accepts is dropped before formatting, and its arguments aren't evaluated.
+
+The macros format with `gcst::format()`, which takes the same arguments as `std::format` and returns a `std::string`. It can be used on its own.
 
 > **[!NOTE]**  
-> The macros come with `<gcst/gcst.h>` and `<gcst/utils.h>`. In a file that includes either of them, an identifier or an `#ifdef` named `DEBUG`, `ERROR` and so on refers to the macro.
+> The macros come with `<gcst/gcst.h>` and `<gcst/utils.h>`. In a file that includes either of them, `DEBUG`, `ERROR` and the other names followed by `(` are the macros, and `#ifdef DEBUG` is true.
 
 ## Errors
 
@@ -114,6 +131,7 @@ This one writes to a rotating file and gives the console a short pattern:
 ```cpp
 // mylogger.h
 #include <gcst/gcst.h>
+#include <spdlog/common.h>
 
 class mylogger : public gcst::basic_logger <mylogger>
 {
@@ -178,11 +196,11 @@ Rules for a derived class:
 - **Keep constructors `protected`, not `private`,** for the same reason as with [settings](settings.md#adding-settings-of-your-own): `init()` creates the object through a helper class derived from yours. `using basic_logger::basic_logger;` is enough.
 - **Initialize the settings first.** `init()` takes the file path from them, and the built-in sinks take their levels.
 - **Set per-sink patterns after `ilogger::formatter_init()`.** It runs once both sinks exist and sets its pattern on every one of them.
-- **Include the spdlog headers** of the sinks you use. `gcst::utils` passes spdlog on to the targets linking it, so no extra CMake is needed.
+- **Include the spdlog headers** you use: `<spdlog/common.h>` for `spdlog::sink_ptr` and the level functions, plus the headers of your sinks. `<gcst/gcst.h>` only declares spdlog's types. `gcst::utils` passes spdlog on to the targets linking it, so no extra CMake is needed.
 
 ## Reference
 
-Names are declared in `gcst::utils`; `logger`, `basic_logger`, `journal` and `init` are also available in `gcst`.
+Names are declared in `gcst::utils`; `logger`, `basic_logger`, `journal`, `init`, `loglevel` and `format` are also available in `gcst`.
 
 | Name | Description |
 |---|---|
@@ -191,6 +209,10 @@ Names are declared in `gcst::utils`; `logger`, `basic_logger`, `journal` and `in
 | `logger` | `basic_logger<>`: the built-in logger |
 | `journal` | `std::unique_ptr<ilogger>` holding the logger after a successful `init()` |
 | `init(argc, argv[, cli])` | Initializes the [settings](settings.md), passing the arguments on, then the logger |
+| `loglevel` | Enum class: `trace`, `debug`, `info`, `warn`, `error`, `critical` |
+| `format(fmt, args...)` | Formats like `std::format`; used by the macros |
+| `GCST_LOG(level, ...)` | Macro, logs at a `loglevel` — see [Logging macros](#logging-macros) |
+| `GCST_LOG_FROM(level, location, ...)` | The same, attributed to a `std::source_location` |
 | `GCST_LOGGER_INITED` | Macro, true once the logger is initialized |
 
 Public members of `ilogger`:
@@ -202,6 +224,8 @@ Public members of `ilogger`:
 | `const std::shared_ptr<spdlog::sinks::sink> consolesink() const` | The console sink, with its level |
 | `const fs::path& filepath() const` | The log file path |
 | `fs::path relfilepath() const` | The same path relative to the executable's directory |
+| `static bool is_active(loglevel)` | True when the logger is initialized and an output accepts the level |
+| `static void write(loglevel, std::source_location, std::string)` | Writes a formatted message; the macros call it after `is_active()` |
 
 Protected members, available to derived classes:
 

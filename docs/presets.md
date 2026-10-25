@@ -20,7 +20,7 @@ A preset is a key in `.gcst/presets.json` with three sections:
 "unix-clang-libc++": {
     "cmake": {
         "description": "Clang + LLVM libc++",
-        "generator": "Unix Makefiles",
+        "generator": "{gcst::CMAKE_GENERATOR_UNIX}",
         "binaryDir": "${sourceDir}/build",
         "cacheVariables": {
             "CMAKE_C_COMPILER": "clang",
@@ -28,7 +28,8 @@ A preset is a key in `.gcst/presets.json` with three sections:
             "CMAKE_TOOLCHAIN_FILE": "${sourceDir}/build/conan_toolchain.cmake",
             "CMAKE_BUILD_TYPE": "Release",
             "CMAKE_CXX_STANDARD": "{gcst::C++_VERSION}",
-            "CMAKE_CXX_STANDARD_REQUIRED": "ON"
+            "CMAKE_CXX_STANDARD_REQUIRED": "ON",
+            "CMAKE_COLOR_DIAGNOSTICS": "ON"
         }
     },
     "conan": {
@@ -62,7 +63,7 @@ A preset is a key in `.gcst/presets.json` with three sections:
 
 ## The `cmake` section
 
-The body of a CMake [configure preset](https://cmake.org/cmake/help/latest/manual/cmake-presets.7.html). The key becomes its `name`; everything else is copied as is, with `{gcst::...}` [tags](#toolchain-versions) replaced, so any field of the presets schema works, `inherits` included. Every base preset sets `CMAKE_CXX_STANDARD` to `{gcst::C++_VERSION}`.
+The body of a CMake [configure preset](https://cmake.org/cmake/help/latest/manual/cmake-presets.7.html). The key becomes its `name`; everything else is copied as is, with `{gcst::...}` [tags](#toolchain-versions) replaced, so any field of the presets schema works, `inherits` included. Every base preset sets `CMAKE_CXX_STANDARD` to `{gcst::C++_VERSION}` and takes its `generator` from one of the [generator variables](#toolchain-versions).
 
 Keep `binaryDir` at `${sourceDir}/build` and the toolchain file at `build/conan_toolchain.cmake`: that is where Conan writes its output.
 
@@ -153,6 +154,9 @@ Compiler versions and the C++ standard live in one place, the `.vars` service ke
 ```json
 ".vars": {
     "C++_VERSION": "23",
+    "CMAKE_GENERATOR_UNIX":  "Unix Makefiles",
+    "CMAKE_GENERATOR_WIN64": "MinGW Makefiles",
+    "CMAKE_GENERATOR_MSVC":  "Visual Studio 18 2026",
     "GCC_VERSION":          { "local": "16.1.0", "github_ci": "16.1.0" },
     "CLANG_VERSION":        { "local": "19.1.7", "github_ci": "19.1.7" },
     "MSVC_VERSION":         { "local": "19.44",  "github_ci": "19.44"  },
@@ -161,6 +165,16 @@ Compiler versions and the C++ standard live in one place, the `.vars` service ke
 ```
 
 The generator picks `github_ci` when it runs on a GitHub runner and `local` otherwise. Values are plain numeric versions, such as `16.1.0` or `19.44`. A key holding a plain string instead, like `C++_VERSION`, is the same everywhere. `C++_VERSION` is the C++ standard of the project and its dependencies: base presets pass it to CMake as `CMAKE_CXX_STANDARD` and to Conan as `compiler.cppstd`.
+
+The `CMAKE_GENERATOR_*` keys are the CMake generators of the base presets, one per platform:
+
+| Key | Value | Presets |
+|---|---|---|
+| `CMAKE_GENERATOR_UNIX` | `Unix Makefiles` | `unix-*` |
+| `CMAKE_GENERATOR_WIN64` | `MinGW Makefiles` | `win64-gcc-libstdc++`, `win64-clang-*` |
+| `CMAKE_GENERATOR_MSVC` | `Visual Studio 18 2026` | `win64-msvc-msvcstl` |
+
+To build with another generator, such as Ninja, see [Generators](local-presets.md#generators).
 
 Every key ending in `_VERSION` whose value has the two sides also produces derived values, for both environments:
 

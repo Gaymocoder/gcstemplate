@@ -29,6 +29,7 @@ print(gcst.paths.build_dir)   # absolute path to build/
 | `gcst.paths.temp_dir` | `.gcst/.temp/`, reserved for temporary files and ignored by git |
 | `gcst.paths.ghci_dir` | `.github/workflows/` |
 | `gcst.paths.configure_py` | `.gcst/scripts/configure.py` |
+| `gcst.paths.build_times_py` | `.gcst/scripts/build_times.py` |
 | `gcst.paths.update_py` | `.gcst/scripts/update.py` inside the gcstemplate submodule, or `''` if there is none |
 | `gcst.paths.default_preset` | `.gcst/.default` |
 

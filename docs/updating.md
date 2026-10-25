@@ -73,7 +73,7 @@ Both lists live in the template's `.gcst/` and are read from the submodule. One 
 |---|---|
 | `.github/workflows/ci.yml` | `conanfile.py` |
 | CI toolchain installers: `.github/workflows/scripts/gcc.sh`, `gcc.ps1`, `clang.sh`, `clang-msvc.ps1`, `clang-mingw.ps1` | `CMakeLists.txt` |
-| `.gcst/presets.json`, `.gcst/scripts/build.py`, `.gcst/scripts/configure.py`, `.gcst/scripts/conan_cache_fresh.py` | |
+| `.gcst/presets.json`, `.gcst/scripts/build.py`, `.gcst/scripts/configure.py`, `.gcst/scripts/conan_cache_fresh.py`, `.gcst/scripts/build_times.py` | |
 | the template's [Conan dependencies](dependencies.md#conanfilepy): `.gcst/gcst_conan_deps.py` | |
 | [`gcst` package](scripting.md): `.gcst/gcst/__init__.py`, `constants.py`, `detect_api.py`, `service.py` | |
 | both list files | |
