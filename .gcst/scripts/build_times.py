@@ -30,6 +30,7 @@ from pathlib import Path
 
 OBJECT_SUFFIXES = ('.o', '.obj')
 SCAN_SUFFIXES = ('.ddi', '.modmap', '.dd', '.json')  # C++20 module scanning jobs
+PCH_SUFFIXES = ('.pch', '.gch')
 TRACE_NAME = re.compile(r'\.(c|cc|cpp|cxx|c\+\+)\.json$')
 TOTALS = {'Total ExecuteCompiler': 'total', 'Total Frontend': 'frontend', 'Total Backend': 'backend'}
 INSTANTIATIONS = ('InstantiateFunction', 'InstantiateClass')
@@ -124,8 +125,21 @@ def read_ninja_log(build_dir):
     return log
 
 
-def short_header(path):
+def source_root(build_dir):
+    cache = build_dir / 'CMakeCache.txt'
+    if cache.is_file():
+        with open(cache, encoding = 'utf-8', errors = 'replace') as file:
+            for line in file:
+                if line.startswith('CMAKE_HOME_DIRECTORY:'):
+                    return line.split('=', 1)[1].strip().replace('\\', '/')
+    return build_dir.resolve().parent.as_posix()
+
+
+def short_header(path, root):
     path = path.replace('\\', '/')
+    # Project headers: relative to the source dir, public ones without the "include/" prefix
+    if root and path.startswith(root + '/'):
+        return path[len(root) + 1:].removeprefix('include/')
     if '/include/' in path:
         path = path.rsplit('/include/', 1)[1]
     std = re.sub(r'^(?:.*/)?c\+\+/(?:v1|\d+)/', '', path)
@@ -179,7 +193,7 @@ def inclusive_and_self(spans):
     return dict(result)
 
 
-def read_trace(path):
+def read_trace(path, root):
     try:
         data = json.loads(path.read_text())
     except (OSError, ValueError):
@@ -199,10 +213,10 @@ def read_trace(path):
         if name in TOTALS:
             totals[TOTALS[name]] = event['dur'] / 1e6
         elif name == 'Source' and phase == 'X':
-            sources.append((event['ts'], event['ts'] + event['dur'], short_header(detail)))
+            sources.append((event['ts'], event['ts'] + event['dur'], short_header(detail, root)))
         elif name == 'Source' and phase == 'b':
             # Newer clang: a begin/end pair per include, written when the include ends
-            open_sources.append((event['ts'], short_header(detail)))
+            open_sources.append((event['ts'], short_header(detail, root)))
         elif name == 'Source' and phase == 'e' and open_sources:
             begin, header = open_sources.pop()
             sources.append((begin, event['ts'], header))
@@ -236,6 +250,7 @@ def source_name(output):
 
 def read_units(build_dir, log):
     times = log.times if log else {}
+    root = source_root(build_dir)
     traces = {}
     stale = 0
 
@@ -246,7 +261,7 @@ def read_units(build_dir, log):
         output = next((stem + s for s in OBJECT_SUFFIXES if stem + s in times or (build_dir / (stem + s)).exists()), None)
         if output is None:
             continue
-        trace = read_trace(path)
+        trace = read_trace(path, root)
         if trace is None:
             continue
         # The object was rebuilt later without -ftime-trace: the trace describes an older compile
@@ -402,7 +417,8 @@ def headline(log, units, paint, markdown):
         return [paint('No .ninja_log: wall clock is unknown (it exists only with the Ninja generator)', YELLOW)]
 
     rebuilt = [unit for unit in units if unit.output in log.last_run]
-    linked = [t for o, t in log.times.items() if o in log.last_run and not o.endswith(OBJECT_SUFFIXES + SCAN_SUFFIXES)]
+    pch = [t for o, t in log.times.items() if o in log.last_run and o.endswith(PCH_SUFFIXES)]
+    linked = [t for o, t in log.times.items() if o in log.last_run and not o.endswith(OBJECT_SUFFIXES + SCAN_SUFFIXES + PCH_SUFFIXES)]
     parallel = log.busy / log.wall if log.wall else 1.0
     kind = 'full build' if log.is_full() else f'incremental, {len(rebuilt)} of {len(units)} TUs rebuilt'
 
@@ -410,6 +426,8 @@ def headline(log, units, paint, markdown):
     slowest = max((unit for unit in rebuilt if unit.total is not None), key = lambda unit: unit.total, default = None)
     if slowest and log.wall:
         rows.append(('Slowest TU', f'{slowest.total:.2f} s', f'{slowest.name} · {100 * slowest.total / log.wall:.0f} % of the build'))
+    if pch:
+        rows.append(('PCH', f'{sum(pch):.2f} s', f"{len(pch)} {'job' if len(pch) == 1 else 'jobs'}: precompiled headers"))
     if linked:
         rows.append(('Link', f'{sum(linked):.2f} s', f"{len(linked)} {'job' if len(linked) == 1 else 'jobs'}: archives and executables"))
 
