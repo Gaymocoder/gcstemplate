@@ -1,8 +1,11 @@
 {
     ".vars": {
         "C++_VERSION": "23",
-        "CMAKE_GENERATOR": "Ninja",
+        "CMAKE_GENERATOR_UNIX": "Unix Makefiles",
+        "CMAKE_GENERATOR_WIN64": "MinGW Makefiles",
+        "CMAKE_GENERATOR_MSVC": "Visual Studio 18 2026",
         "CMAKE_GENERATOR_RSRV": "NMake Makefiles",
+
         "GCC_VERSION": {
             "local": "16.1.0",
             "github_ci": "16.1.0"
@@ -100,7 +103,7 @@
     "unix-clang-libc++": {
         "cmake": {
             "description": "Clang + LLVM libc++",
-            "generator": "{gcst::CMAKE_GENERATOR}",
+            "generator": "{gcst::CMAKE_GENERATOR_UNIX}",
             "binaryDir": "${sourceDir}/build",
             "cacheVariables": {
                 "CMAKE_C_COMPILER": "clang",
@@ -137,7 +140,7 @@
     "unix-clang-libstdc++": {
         "cmake": {
             "description": "Clang + GCC libstdc++",
-            "generator": "{gcst::CMAKE_GENERATOR}",
+            "generator": "{gcst::CMAKE_GENERATOR_UNIX}",
             "binaryDir": "${sourceDir}/build",
             "cacheVariables": {
                 "CMAKE_C_COMPILER": "clang",
@@ -173,7 +176,7 @@
     "unix-gcc-libstdc++": {
         "cmake": {
             "description": "GNU C Compiler for Unix Makefiles",
-            "generator": "{gcst::CMAKE_GENERATOR}",
+            "generator": "{gcst::CMAKE_GENERATOR_UNIX}",
             "binaryDir": "${sourceDir}/build",
             "cacheVariables": {
                 "CMAKE_C_COMPILER": "gcc",
@@ -204,7 +207,7 @@
     "win64-clang-libc++": {
         "cmake": {
             "description": "Clang + libc++",
-            "generator": "{gcst::CMAKE_GENERATOR}",
+            "generator": "{gcst::CMAKE_GENERATOR_WIN64}",
             "binaryDir": "${sourceDir}/build",
             "cacheVariables": {
                 "CMAKE_C_COMPILER": "clang",
@@ -243,7 +246,7 @@
     "win64-clang-libstdc++": {
         "cmake": {
             "description": "Clang + MinGW libstdc++",
-            "generator": "{gcst::CMAKE_GENERATOR}",
+            "generator": "{gcst::CMAKE_GENERATOR_WIN64}",
             "binaryDir": "${sourceDir}/build",
             "cacheVariables": {
                 "CMAKE_C_COMPILER": "clang",
@@ -282,7 +285,7 @@
     "win64-clang-msvc": {
         "cmake": {
             "description": "Clang + MSVC++",
-            "generator": "{gcst::CMAKE_GENERATOR}",
+            "generator": "{gcst::CMAKE_GENERATOR_WIN64}",
             "binaryDir": "${sourceDir}/build",
             "cacheVariables": {
                 "CMAKE_C_COMPILER": "clang-cl",
@@ -320,7 +323,7 @@
     "win64-gcc-libstdc++": {
         "cmake": {
             "description": "MinGW32",
-            "generator": "{gcst::CMAKE_GENERATOR}",
+            "generator": "{gcst::CMAKE_GENERATOR_WIN64}",
             "binaryDir": "${sourceDir}/build",
             "cacheVariables": {
                 "CMAKE_C_COMPILER": "gcc",
@@ -355,7 +358,7 @@
     "win64-msvc-msvcstl": {
         "cmake": {
             "description": "MSVC++",
-            "generator": "{gcst::CMAKE_GENERATOR}",
+            "generator": "{gcst::CMAKE_GENERATOR_MSVC}",
             "binaryDir": "${sourceDir}/build",
             "cacheVariables": {
                 "CMAKE_TOOLCHAIN_FILE": "${sourceDir}/build/conan_toolchain.cmake",
@@ -375,7 +378,7 @@
                 "build_type": "Release"
             },
             "conf": {
-                "tools.cmake.cmaketoolchain:generator": "{gcst::CMAKE_GENERATOR}",
+                "tools.cmake.cmaketoolchain:generator": "{gcst::CMAKE_GENERATOR_MSVC}",
                 "cli11/*:tools.cmake.cmaketoolchain:generator": "{gcst::CMAKE_GENERATOR_RSVR}"
             }
         },
