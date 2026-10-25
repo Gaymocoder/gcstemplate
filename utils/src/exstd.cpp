@@ -68,4 +68,10 @@ std::string strnow()
     return std::format("{0:%F_%H-%M-%S}", now);
 }
 
+std::string vstrformat(std::string_view fmt, std::format_args args)
+{
+    return std::vformat(fmt, args);
+}
+
+
 }

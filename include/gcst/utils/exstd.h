@@ -13,6 +13,7 @@ namespace spdlog::level
     std::string_view format_as(level_enum l);
 }
 
+
 using spdlog::level::level_enum;
 
 template <>
@@ -20,6 +21,7 @@ struct std::formatter <level_enum> : public std::formatter <std::string_view>
 {
     std::format_context::iterator format(level_enum, std::format_context& ctx) const;
 };
+
 
 namespace gcst
 {
@@ -31,6 +33,15 @@ namespace gcst
 
             fs::path exe_path();
             std::string strnow();
+
+            std::string vstrformat(std::string_view fmt, std::format_args args);
+
+            template <class... Args>
+            inline std::string strformat(std::format_string <Args...> fmt, Args&&... args)
+            {
+                return vstrformat(fmt.get(), std::make_format_args(args...));
+            }
+
         }
 
         using namespace gcst::utils::exstd;
