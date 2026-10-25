@@ -1,5 +1,5 @@
 cmake_minimum_required(VERSION 3.31)
-project(gcstemplate VERSION 6.2.1)
+project(gcstemplate VERSION 6.3.0)
 
 find_package(spdlog REQUIRED)
 
