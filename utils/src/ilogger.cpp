@@ -15,6 +15,13 @@ namespace fs = std::filesystem;
 
 const char* logger_name = "gcstemplate";
 
+static_assert(static_cast <int> (gcst::loglevel::trace)    == spdlog::level::trace);
+static_assert(static_cast <int> (gcst::loglevel::debug)    == spdlog::level::debug);
+static_assert(static_cast <int> (gcst::loglevel::info)     == spdlog::level::info);
+static_assert(static_cast <int> (gcst::loglevel::warn)     == spdlog::level::warn);
+static_assert(static_cast <int> (gcst::loglevel::error)    == spdlog::level::error);
+static_assert(static_cast <int> (gcst::loglevel::critical) == spdlog::level::critical);
+
 namespace gcst::utils
 {
 
@@ -122,6 +129,29 @@ gcst::etype ilogger::setup()
 
     spdlog::set_default_logger(this->_logger);
     return 0;
+}
+
+bool ilogger::is_active(loglevel level)
+{
+    if (!GCST_LOGGER_INITED)
+        return false;
+
+    auto spdlevel = static_case <spdlog::level::level_enum> (level);
+    if (!gcst::journal->logger()->should_log(spdlevel))
+        return false;
+
+    auto& filesink = gcst::journal->filesink();
+    auto& consolesink = gcst::journal->consolesink();
+    if (!(filesink->should_log(spdlevel) && consolesink->should_log(spdlevel)))
+        return false;
+
+    return true;
+}
+
+void ilogger::write(loglevel level, std::source_location loc, std::string msg)
+{
+    spdlog::source_loc source {loc.file_name(), static_cast <int> (loc.line()), loc.function_name()};
+    gcst::journal->logger()->log(source, static_cast <spdlog::level::level_enum> (level), msg);
 }
 
 ilogger::ilogger(const fs::path& dir, std::string filename)

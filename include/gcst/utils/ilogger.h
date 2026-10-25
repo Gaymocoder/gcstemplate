@@ -3,9 +3,11 @@
 
 #include <mutex>
 #include <string>
+#include <format>
 #include <filesystem>
+#include <source_location>
 
-#include <spdlog/spdlog.h>
+#include <spdlog/fwd.h>
 
 #include "gcst/utils/exstd.h"
 
@@ -13,17 +15,34 @@ namespace fs = std::filesystem;
 
 #define GCST_LOGGER_INITED (gcst::utils::journal)
 
-#define TRACE     if(GCST_LOGGER_INITED) SPDLOG_TRACE
-#define DEBUG     if(GCST_LOGGER_INITED) SPDLOG_DEBUG
-#define INFO      if(GCST_LOGGER_INITED) SPDLOG_INFO
-#define WARN      if(GCST_LOGGER_INITED) SPDLOG_WARN
-#define ERROR     if(GCST_LOGGER_INITED) SPDLOG_ERROR
-#define CRITICAL  if(GCST_LOGGER_INITED) SPDLOG_CRITICAL
+#define GCST_LOG(lvl, ...) \
+    do \
+    { \
+        if (gcst::utils::ilogger::is_active(lvl)) \
+            gcst::utils::ilogger::write(lvl, std::source_location::current(), std::format(__VA_ARGS__)); \
+    } while (0)
+
+#define TRACE(...)     GCST_LOG(gcst::utils::loglevel::trace, __VA_ARGS__);
+#define DEBUG(...)     GCST_LOG(gcst::utils::loglevel::debug, __VA_ARGS__);
+#define INFO(...)      GCST_LOG(gcst::utils::loglevel::info, __VA_ARGS__);
+#define WARN(...)      GCST_LOG(gcst::utils::loglevel::warn, __VA_ARGS__);
+#define ERROR(...)     GCST_LOG(gcst::utils::loglevel::error, __VA_ARGS__);
+#define CRITICAL(...)  GCST_LOG(gcst::utils::loglevel::critical, __VA_ARGS__);
 
 namespace gcst
 {
     namespace utils
     {
+        enum class loglevel : int 
+        {
+            trace,
+            debug,
+            info,
+            warn,
+            error,
+            critical,
+        };
+
         class ilogger
         {
             using spdsink_ptr = std::shared_ptr <spdlog::sinks::sink>;
@@ -49,6 +68,9 @@ namespace gcst
                 const std::shared_ptr <spdlog::sinks::sink> filesink() const {return _filesink;}
                 const std::shared_ptr <spdlog::sinks::sink> consolesink() const {return _consolesink;}
 
+                static bool is_active(ilogger::loglevel);
+                static void write(ilogger::loglevel, std::source_location, std::string);
+
                 virtual ~ilogger() = 0;
         };
 
@@ -56,5 +78,6 @@ namespace gcst
     }
 
     using gcst::utils::journal;
+    using gcst::utils::loglevel;
 }
 #endif

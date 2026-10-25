@@ -5,7 +5,7 @@
 
 #include <memory>
 
-#include "gcst/utils/logger.h"
+#include "gcst/utils/ilogger.h"
 
 namespace gcst::utils
 {
