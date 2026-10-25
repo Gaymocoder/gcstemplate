@@ -1,6 +1,5 @@
 #include "gcst/utils/ilogger.h"
 
-#include <print>
 #include <filesystem>
 
 #include <spdlog/spdlog.h>
@@ -31,7 +30,7 @@ class file_ptr_flag : public spdlog::custom_flag_formatter
         void format(const spdlog::details::log_msg &msg, const std::tm &, spdlog::memory_buf_t &dest) override
         {
             std::string filename = fs::path(msg.source.filename).filename().string();
-            std::string new_flag = std::format("{}:{}", filename, msg.source.line);
+            std::string new_flag = gcst::format("{}:{}", filename, msg.source.line);
 
             std::string paddered;
             typedef spdlog::details::padding_info::pad_side padside;
@@ -42,15 +41,15 @@ class file_ptr_flag : public spdlog::custom_flag_formatter
             switch (padinfo_.side_)
             {
                 case padside::left:
-                    paddered = std::format("{:>{}}", new_flag, padinfo_.width_);
+                    paddered = gcst::format("{:>{}}", new_flag, padinfo_.width_);
                     break;
 
                 case padside::center:
-                    paddered = std::format("{:^{}}", new_flag, padinfo_.width_);
+                    paddered = gcst::format("{:^{}}", new_flag, padinfo_.width_);
                     break;
 
                 case padside::right:
-                    paddered = std::format("{:<{}}", new_flag, padinfo_.width_);
+                    paddered = gcst::format("{:<{}}", new_flag, padinfo_.width_);
                     break;
             }
             

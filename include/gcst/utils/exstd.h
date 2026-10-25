@@ -37,7 +37,7 @@ namespace gcst
             std::string vstrformat(std::string_view fmt, std::format_args args);
 
             template <class... Args>
-            inline std::string strformat(std::format_string <Args...> fmt, Args&&... args)
+            inline std::string format(std::format_string <Args...> fmt, Args&&... args)
             {
                 return vstrformat(fmt.get(), std::make_format_args(args...));
             }
@@ -48,6 +48,7 @@ namespace gcst
     }
 
     using gcst::utils::etype;
+    using gcst::utils::format;
 }
 
 #endif

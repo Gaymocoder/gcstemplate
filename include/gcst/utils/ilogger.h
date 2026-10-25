@@ -19,7 +19,7 @@ namespace fs = std::filesystem;
     do \
     { \
         if (gcst::utils::ilogger::is_active(lvl)) \
-            gcst::utils::ilogger::write(lvl, std::source_location::current(), std::format(__VA_ARGS__)); \
+            gcst::utils::ilogger::write(lvl, std::source_location::current(), gcst::format(__VA_ARGS__)); \
     } while (0)
 
 #define TRACE(...)     GCST_LOG(gcst::utils::loglevel::trace, __VA_ARGS__);

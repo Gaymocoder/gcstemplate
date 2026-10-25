@@ -65,7 +65,7 @@ fs::path exe_path()
 std::string strnow()
 {
     auto now = std::chrono::floor <std::chrono::seconds> (std::chrono::system_clock::now());
-    return std::format("{0:%F_%H-%M-%S}", now);
+    return gcst::format("{0:%F_%H-%M-%S}", now);
 }
 
 std::string vstrformat(std::string_view fmt, std::format_args args)

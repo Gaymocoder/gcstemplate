@@ -1,11 +1,11 @@
 #include "gcst/utils/isettings.h"
 
 #include <vector>
-#include <format>
 #include <fstream>
 
 #include <CLI/CLI.hpp>
 
+#include "gcst/utils/exstd.h"
 #include "gcst/utils/logger.h"
 
 namespace gcst::utils 
@@ -35,12 +35,12 @@ void isettings::set(std::string key, std::string value, isettings::type settype)
     switch (settype)
     {
         case isettings::type::flag:
-            this->cli->add_flag(std::format("--{}", key), this->dict[key]);
+            this->cli->add_flag(gcst::format("--{}", key), this->dict[key]);
             settype_str = "flag";
             break;
 
         case isettings::type::option:
-            this->cli->add_option(std::format("--{}", key), this->dict[key]);
+            this->cli->add_option(gcst::format("--{}", key), this->dict[key]);
             settype_str = "option";
             break;
     }
@@ -59,7 +59,7 @@ void isettings::write()
     {
         if (key != "override-config" && key != "logfile-name")
         {
-            fconf << std::format("{}=\'{}\'\n", key, value);
+            fconf << gcst::format("{}=\'{}\'\n", key, value);
             TRACE("/tparam saved -> '{}': '{}'", key, value);
         }
     }
@@ -154,13 +154,13 @@ fs::path isettings::config_relpath()
 void isettings::trace()
 {
     for(const auto& [key, value] : this->dict)
-        TRACE("  Option {:<25}{}", std::format("'{}':", key), value);
+        TRACE("  Option {:<25}{}", gcst::format("'{}':", key), value);
 }
 
 void isettings::debug()
 {
     for(const auto& [key, value] : this->dict)
-        DEBUG("  Option {:<25}{}", std::format("'{}':", key), value);
+        DEBUG("  Option {:<25}{}", gcst::format("'{}':", key), value);
 }
 
 isettings::isettings (int largc, char** largv, std::shared_ptr <CLI::App> lcli)
