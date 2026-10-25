@@ -27,7 +27,7 @@ def parseArgs(subscripts = 'all'):
     argvParser.add_argument('-v', '--verbose', action = 'store_true')
     argvParser.add_argument('-u', '--update', action = 'store_true')
     argvParser.add_argument('-d', '--debug', action = 'store_true')
-    argvParser.add_argument('-ft', '--ftime-trace', action = argparse.BooleanOptionalAction, default = None)
+    argvParser.add_argument('--no-ftime-trace', action = 'store_true')
     argvParser.add_argument('-bt', '--build-times', action = 'store_true')
     argvParser.add_argument('-bs', '--build-samples', action = 'store_true')
     argvParser.add_argument('-prl', '--parallel', default = os.cpu_count())
@@ -45,9 +45,9 @@ def parseArgs(subscripts = 'all'):
     if args.preset == None:
         args.preset = getDefaultPreset()
 
-    # [flag, enabled, clang only]; enabled None means "on where the compiler supports it"
+    # [flag, enabled, clang only]
     cmake_cxx_flags.extend([
-        ['-ftime-trace', args.ftime_trace, True],
+        ['-ftime-trace', not args.no_ftime_trace, True],
     ])
 
 
@@ -166,15 +166,7 @@ def cxx_flags(preset):
     compiler = preset_cxx_compiler(preset)
     clang = compiler is not None and 'clang' in Path(compiler).name.lower()
 
-    flags = []
-    for flag, enabled, clang_only in cmake_cxx_flags:
-        if enabled is False:
-            continue
-        if clang_only and not clang:
-            if enabled:
-                print(f"{flag} needs clang, preset '{preset}' uses {compiler or 'an unknown compiler'}: flag skipped")
-            continue
-        flags.append(flag)
+    flags = [flag for flag, enabled, clang_only in cmake_cxx_flags if enabled and (clang or not clang_only)]
 
     # CMake reads CXXFLAGS only when it creates the cache, so a changed flag needs a fresh build dir
     cache = gcst.paths.build_dir/"CMakeCache.txt"
@@ -243,6 +235,14 @@ def main():
 
         return 0
             
+    if args.build_times:
+        result = build_times()
+        if result.returncode != 0:
+            print(f"Build time report failed with code {result.returncode}")
+            return 1
+
+        return 0
+
     clear = args.clear
     preset = args.preset
     if not preset:
@@ -292,13 +292,6 @@ def main():
         if result.returncode != 0:
             print("Executed command:\n", *result.args)
             return 8
-
-    # The report never changes the exit code: the build itself has succeeded
-    if args.build_times:
-        print()
-        result = build_times()
-        if result.returncode != 0:
-            print(f"Build time report failed with code {result.returncode}")
 
     return 0
 

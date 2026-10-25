@@ -1,7 +1,8 @@
 # Written by Claude (vibe-coded), not by the template's author.
 """Build time report: Ninja's log plus clang's -ftime-trace files.
 
-    sh build.sh -p <preset> -c -bt          # clang presets write traces by default
+    sh build.sh -p <preset> -c              # clang presets write traces by default
+    sh build.sh -bt                         # this report, without building
     python3 .gcst/scripts/build_times.py [build_dir] [-n N] [-md] [--color auto|always|never]
 
 Per translation unit (from <object>.json; without a trace only Total is known):
