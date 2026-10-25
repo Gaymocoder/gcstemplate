@@ -12,10 +12,8 @@ from pathlib import Path
 args = None
 conf_args = []
 updater_args = []
-cmake_cxx_flags = []
 
 def parseArgs(subscripts = 'all'):
-    global cmake_cxx_flags
     global args, conf_args, updater_args
 
     if args or conf_args or updater_args:
@@ -44,11 +42,6 @@ def parseArgs(subscripts = 'all'):
     args = argvParser.parse_args()
     if args.preset == None:
         args.preset = getDefaultPreset()
-
-    # [flag, enabled, clang only]
-    cmake_cxx_flags.extend([
-        ['-ftime-trace', not args.no_ftime_trace, True],
-    ])
 
 
 def getDefaultPreset():
@@ -141,49 +134,7 @@ def conan_install(profile):
     return subprocess.run(command, check = False)
 
     
-def preset_cxx_compiler(preset):
-    presets = {}
-    for filename in ["CMakePresets.json", "CMakeUserPresets.json"]:
-        path = gcst.paths.repo/filename
-        if path.exists():
-            with open(path, 'r', encoding = 'utf-8') as f:
-                presets.update({p['name']: p for p in json.load(f).get('configurePresets', [])})
-
-    pending = [preset]
-    while pending:
-        current = presets.get(pending.pop(0))
-        if not current:
-            continue
-        compiler = current.get('cacheVariables', {}).get('CMAKE_CXX_COMPILER')
-        if compiler:
-            return compiler if isinstance(compiler, str) else compiler.get('value')
-        inherits = current.get('inherits', [])
-        pending.extend([inherits] if isinstance(inherits, str) else inherits)
-    return None
-
-
-def cxx_flags(preset):
-    compiler = preset_cxx_compiler(preset)
-    clang = compiler is not None and 'clang' in Path(compiler).name.lower()
-
-    flags = [flag for flag, enabled, clang_only in cmake_cxx_flags if enabled and (clang or not clang_only)]
-
-    # CMake reads CXXFLAGS only when it creates the cache, so a changed flag needs a fresh build dir
-    cache = gcst.paths.build_dir/"CMakeCache.txt"
-    if cache.exists():
-        with open(cache, 'r', encoding = 'utf-8', errors = 'replace') as f:
-            cached = next((line.split('=', 1)[1].split() for line in f if line.startswith('CMAKE_CXX_FLAGS:')), [])
-        for flag, _, _ in cmake_cxx_flags:
-            if (flag in flags) != (flag in cached):
-                state = 'without' if flag in flags else 'with'
-                print(f"build/ was configured {state} {flag}, the change applies only after a rebuild with -c")
-    return flags
-
-
 def cmake(preset):
-    env = os.environ.copy()
-    env['CXXFLAGS'] = " ".join(cxx_flags(preset))
-
     command = ["cmake"]
     if preset == ".default":
         command.extend(["-B", gcst.paths.build_dir, "-S", gcst.paths.repo])
@@ -192,10 +143,11 @@ def cmake(preset):
 
     command.append(f"-DGCST_WARNINGS_AS_ERRORS={os.environ['GCST_WERROR']}")
     command.append(f"-DCMAKE_BUILD_TYPE={'Debug' if args.debug else 'Release'}")
+    command.append(f"-DGCST_TIME_TRACE={'OFF' if args.no_ftime_trace else 'ON'}")
 
     build_samples_env = True if ("GCST_SAMPLES_BUILD" not in os.environ.copy() or os.environ['GCST_SAMPLES_BUILD'] == 'ON') else False
     command.append(f"-DGCST_SAMPLES_BUILD={"ON" if (args.build_samples or build_samples_env) else "OFF"}")
-    return subprocess.run(command, cwd = gcst.paths.repo, check = False, env = env)
+    return subprocess.run(command, cwd = gcst.paths.repo, check = False)
 
     
 def cmake_build():

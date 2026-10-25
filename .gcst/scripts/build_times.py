@@ -1,7 +1,7 @@
 # Written by Claude (vibe-coded), not by the template's author.
 """Build time report: Ninja's log plus clang's -ftime-trace files.
 
-    sh build.sh -p <preset> -c              # clang presets write traces by default
+    sh build.sh -p <preset> -c              # full build; clang presets write traces by default
     sh build.sh -bt                         # this report, without building
     python3 .gcst/scripts/build_times.py [build_dir] [-n N] [-md] [--color auto|always|never]
 
@@ -469,7 +469,7 @@ def notes(log, units, stale, paint, has_bar):
             lines.append(f'{legend}   {paint.bar(NO_TRACE_BAR * 2)} no trace')
         lines.append(paint('Frontend Σ = headers + templates + other. Instantiations done while parsing a header count as headers.', DIM))
     else:
-        lines.append(paint('No -ftime-trace data, only Total is known. Traces are written by clang presets, on a fresh build: -c', YELLOW))
+        lines.append(paint('No -ftime-trace data, only Total is known. Traces are written by clang presets without --no-ftime-trace', YELLOW))
 
     if log and log.wall and log.busy / log.wall > PARALLEL_WARNING:
         lines.append(paint(f'×{log.busy / log.wall:.1f} jobs ran at once, so every per-file time is inflated by sharing cores.', YELLOW))
