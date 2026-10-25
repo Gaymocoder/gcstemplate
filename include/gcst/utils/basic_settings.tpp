@@ -21,7 +21,7 @@ gcst::etype basic_settings <dsettings> ::init(Args&&... args)
     gcst::params = std::move(lparams);
     
     DEBUG("gcst::params have been inited successfully");
-    gcst::params->trace();
+    gcst::params->log(gcst::loglevel::trace);
     return 0;
 }
 

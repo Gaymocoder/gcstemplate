@@ -27,6 +27,8 @@ namespace gcst
 {
     namespace utils
     {
+        enum class loglevel : int;
+
         namespace exstd
         {
             typedef std::expected <int, int> etype;
@@ -49,6 +51,7 @@ namespace gcst
 
     using gcst::utils::etype;
     using gcst::utils::format;
+    using gcst::utils::loglevel;
 }
 
 #endif

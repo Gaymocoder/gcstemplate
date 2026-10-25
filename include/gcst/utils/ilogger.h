@@ -1,9 +1,7 @@
 #ifndef __GCST_UTILS_ILOGGER_H__
 #define __GCST_UTILS_ILOGGER_H__
 
-#include <mutex>
 #include <string>
-#include <format>
 #include <filesystem>
 #include <source_location>
 
@@ -20,6 +18,13 @@ namespace fs = std::filesystem;
     { \
         if (gcst::utils::ilogger::is_active(lvl)) \
             gcst::utils::ilogger::write(lvl, std::source_location::current(), gcst::format(__VA_ARGS__)); \
+    } while (0)
+
+#define GCST_LOG_FROM(lvl, sl, ...) \
+    do \
+    { \
+        if (gcst::utils::ilogger::is_active(lvl)) \
+            gcst::utils::ilogger::write(lvl, sl, gcst::format(__VA_ARGS__)); \
     } while (0)
 
 #define TRACE(...)     GCST_LOG(gcst::utils::loglevel::trace, __VA_ARGS__);
@@ -78,6 +83,5 @@ namespace gcst
     }
 
     using gcst::utils::journal;
-    using gcst::utils::loglevel;
 }
 #endif

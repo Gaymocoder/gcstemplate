@@ -4,6 +4,7 @@
 #include <map>
 #include <memory>
 #include <expected>
+#include <source_location>
 
 #include "gcst/utils/exstd.h"
 
@@ -52,8 +53,7 @@ namespace gcst
                 const std::map <std::string, std::string>& list();
                 virtual fs::path config_relpath() final;
 
-                virtual void trace();
-                virtual void debug();
+                virtual void log(gcst::loglevel, std::source_location sl = std::source_location::current());
                 virtual ~isettings() = 0;
         };
 

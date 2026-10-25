@@ -19,7 +19,7 @@ gcst::etype init(int argc, char** argv, std::shared_ptr <CLI::App> lcli)
 
     INFO("gcstemplate has been inited succesfully");
     DEBUG("Parsed options:");
-    gcst::params->debug();
+    gcst::params->log(gcst::loglevel::debug);
 
     INFO("gcst::journal is inited with logfile {}", gcst::journal->relfilepath().string());
     DEBUG("  journal's file loglevel '{}'", gcst::journal->filesink()->level());

@@ -151,16 +151,10 @@ fs::path isettings::config_relpath()
     return fs::path(".")/fs::relative(this->config_path, gcst::utils::exe_path().parent_path());
 }
 
-void isettings::trace()
+void isettings::log(gcst::loglevel lvl, std::source_location sl)
 {
     for(const auto& [key, value] : this->dict)
-        TRACE("  Option {:<25}{}", gcst::format("'{}':", key), value);
-}
-
-void isettings::debug()
-{
-    for(const auto& [key, value] : this->dict)
-        DEBUG("  Option {:<25}{}", gcst::format("'{}':", key), value);
+        GCST_LOG_FROM(lvl, sl, "  Option {:<25}{}", gcst::format("'{}':", key), value);
 }
 
 isettings::isettings (int largc, char** largv, std::shared_ptr <CLI::App> lcli)
