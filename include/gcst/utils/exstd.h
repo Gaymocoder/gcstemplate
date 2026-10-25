@@ -1,6 +1,7 @@
 #ifndef __GCST_UTILS_EXST__
 #define __GCST_UTILS_EXST__
 
+#include <format>
 #include <expected>
 #include <filesystem>
 
@@ -11,6 +12,14 @@ namespace spdlog::level
     enum level_enum : int;
     std::string_view format_as(level_enum l);
 }
+
+using spdlog::level::level_enum;
+
+template <>
+struct std::formatter <level_enum> : public std::formatter <std::string_view>
+{
+    std::format_context::iterator format(level_enum, std::format_context& ctx) const;
+};
 
 namespace gcst
 {

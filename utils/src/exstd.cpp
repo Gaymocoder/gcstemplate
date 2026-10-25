@@ -10,12 +10,19 @@
 
 #include <spdlog/common.h>
 
+std::format_context::iterator std::formatter <level_enum> ::format(level_enum lvl, std::format_context& ctx) const
+{
+    auto svt = to_string_view(lvl);
+    std::string_view sv {svt.data(), svt.size()};
+    return std::formatter <std::string_view> ::format(sv, ctx);
+}
+
 namespace spdlog::level 
 {
 
-std::string_view format_as(level_enum l)
+std::string_view format_as(level_enum lvl)
 {
-    auto sv = to_string_view(l);
+    auto sv = to_string_view(lvl);
     return {sv.data(), sv.size()};
 }
 

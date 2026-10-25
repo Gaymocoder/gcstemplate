@@ -2,6 +2,7 @@
 #define __GCST_SAMPLES_MYLOGGER_H__
 
 #include <gcst/gcst.h>
+#include <spdlog/common.h>
 
 class mylogger : public gcst::basic_logger <mylogger>
 {

@@ -68,8 +68,8 @@ namespace gcst
                 const std::shared_ptr <spdlog::sinks::sink> filesink() const {return _filesink;}
                 const std::shared_ptr <spdlog::sinks::sink> consolesink() const {return _consolesink;}
 
-                static bool is_active(ilogger::loglevel);
-                static void write(ilogger::loglevel, std::source_location, std::string);
+                static bool is_active(loglevel);
+                static void write(loglevel, std::source_location, std::string);
 
                 virtual ~ilogger() = 0;
         };

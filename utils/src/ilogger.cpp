@@ -19,7 +19,7 @@ static_assert(static_cast <int> (gcst::loglevel::trace)    == spdlog::level::tra
 static_assert(static_cast <int> (gcst::loglevel::debug)    == spdlog::level::debug);
 static_assert(static_cast <int> (gcst::loglevel::info)     == spdlog::level::info);
 static_assert(static_cast <int> (gcst::loglevel::warn)     == spdlog::level::warn);
-static_assert(static_cast <int> (gcst::loglevel::error)    == spdlog::level::error);
+static_assert(static_cast <int> (gcst::loglevel::error)    == spdlog::level::err);
 static_assert(static_cast <int> (gcst::loglevel::critical) == spdlog::level::critical);
 
 namespace gcst::utils
@@ -136,7 +136,7 @@ bool ilogger::is_active(loglevel level)
     if (!GCST_LOGGER_INITED)
         return false;
 
-    auto spdlevel = static_case <spdlog::level::level_enum> (level);
+    auto spdlevel = static_cast <spdlog::level::level_enum> (level);
     if (!gcst::journal->logger()->should_log(spdlevel))
         return false;
 
