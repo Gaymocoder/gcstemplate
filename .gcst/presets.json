@@ -375,6 +375,7 @@
                 "build_type": "Release"
             },
             "conf": {
+                "tools.cmake.cmaketoolchain:generator": "{gcst::CMAKE_GENERATOR}",
                 "cli11/*:tools.cmake.cmaketoolchain:generator": "{gcst::CMAKE_GENERATOR_RSVR}"
             }
         },
