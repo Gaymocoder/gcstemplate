@@ -153,6 +153,7 @@ def cmake(preset):
 def cmake_build():
     env = os.environ.copy()
     env['TERM'] = 'dumb'
+    env['CLICOLOR_FORCE'] = '1'
     command = ["cmake", "--build", gcst.paths.build_dir, '--config']
     command.append('Debug' if getArgs().debug else 'Release')
     command.extend(['--parallel', str(getArgs().parallel)])

@@ -108,7 +108,8 @@
                 "CMAKE_TOOLCHAIN_FILE": "${sourceDir}/build/conan_toolchain.cmake",
                 "CMAKE_BUILD_TYPE": "Release",
                 "CMAKE_CXX_STANDARD": "{gcst::C++_VERSION}",
-                "CMAKE_CXX_STANDARD_REQUIRED": "ON"
+                "CMAKE_CXX_STANDARD_REQUIRED": "ON",
+                "CMAKE_COLOR_DIAGNOSTICS": "ON"
             }
         },
         "conan": {
